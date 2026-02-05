@@ -5,8 +5,9 @@ import { StatsCard } from "../components/dashboard/StatsCard";
 import { MacroProgress } from "../components/dashboard/MacroProgress";
 import { QuickActions } from "../components/dashboard/QuickActions";
 import { LastWorkout } from "../components/dashboard/LastWorkout";
+import { AICoachWidget } from "../components/AICoachWidget"; // <-- IMPORT
 import { useAuth } from "../contexts/AuthContext";
-import api from "../lib/api"; // Changed import
+import api from "../lib/api";
 import { WorkoutSession, DietLog } from "../lib/types";
 
 export default function Dashboard() {
@@ -24,11 +25,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // We will create a single endpoint in the backend to aggregate this data
-      // OR you can make multiple calls here. For now, let's keep it simple.
-
       const { data } = await api.get("/dashboard/stats");
-
       setLastWorkout(data.lastWorkout);
       setExerciseCount(data.lastWorkoutExerciseCount);
       setTodaysDiet(data.todaysDiet);
@@ -38,7 +35,6 @@ export default function Dashboard() {
     }
   };
 
-  // Calculate today's macro totals
   const todayTotals = todaysDiet.reduce(
     (acc, log) => ({
       calories: acc.calories + log.calories,
@@ -51,6 +47,15 @@ export default function Dashboard() {
 
   const firstName = profile?.full_name?.split(" ")[0] || "Athlete";
 
+  // Data for AI Context
+  const dashboardContext = {
+    user: firstName,
+    goal: profile?.fitness_goal,
+    caloriesToday: todayTotals.calories,
+    workoutsThisWeek: workoutCount,
+    lastWorkoutName: lastWorkout?.name || "None"
+  };
+
   return (
     <AppLayout>
       <div className="p-4 space-y-6 max-w-lg mx-auto">
@@ -60,6 +65,9 @@ export default function Dashboard() {
             <span className="text-gradient">{firstName}</span> 💪
           </h1>
         </div>
+
+        {/* --- AI WIDGET --- */}
+        <AICoachWidget page="dashboard" contextData={dashboardContext} />
 
         <div className="grid grid-cols-2 gap-3">
           <StatsCard

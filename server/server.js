@@ -29,8 +29,9 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/diet', require('./routes/diet'));
 app.use('/api/workouts', require('./routes/workouts'));
-app.use('/api/exercises', require('./routes/exercises'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/vision', require('./routes/vision'));
+app.use('/api/exercises', require('./routes/exercises'));
 
 app.get('/', (req, res) => res.send('API is running...'));
 

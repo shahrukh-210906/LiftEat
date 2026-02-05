@@ -3,17 +3,17 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Flame } from "lucide-react";
-import api from "@/lib/api"; // Changed import
+import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { FoodItem, DietLog } from "@/lib/types";
 import { toast } from "sonner";
+import { AICoachWidget } from "@/components/AICoachWidget"; // <-- IMPORT
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 
 export default function Diet() {
   const { user, profile } = useAuth();
@@ -33,10 +33,10 @@ export default function Diet() {
 
   const fetchData = async () => {
     try {
-      const { data: logs } = await api.get("/diet/today"); // Needs backend route
+      const { data: logs } = await api.get("/diet/today");
       setTodaysLogs(logs);
 
-      const { data: foods } = await api.get("/foods"); // Needs backend route
+      const { data: foods } = await api.get("/foods");
       setFoodItems(foods);
     } catch (error) {
       console.error("Error fetching diet data", error);
@@ -53,10 +53,8 @@ export default function Diet() {
       food_name: selectedFood.name,
       quantity_g: qty,
       calories: Math.round((selectedFood.calories_per_100g || 0) * multiplier),
-      protein:
-        Math.round((selectedFood.protein_per_100g || 0) * multiplier * 10) / 10,
-      carbs:
-        Math.round((selectedFood.carbs_per_100g || 0) * multiplier * 10) / 10,
+      protein: Math.round((selectedFood.protein_per_100g || 0) * multiplier * 10) / 10,
+      carbs: Math.round((selectedFood.carbs_per_100g || 0) * multiplier * 10) / 10,
       fat: Math.round((selectedFood.fat_per_100g || 0) * multiplier * 10) / 10,
       meal_type: mealType || null,
     };
@@ -98,9 +96,6 @@ export default function Diet() {
     food.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack"];
-
-  // ... (Return JSX matches original exactly)
   return (
     <AppLayout>
       <div className="p-4 space-y-6 max-w-lg mx-auto">
@@ -115,6 +110,17 @@ export default function Diet() {
           </Button>
         </div>
 
+        {/* --- AI WIDGET --- */}
+        <AICoachWidget 
+          page="diet" 
+          contextData={{
+            caloriesConsumed: todayTotals.calories,
+            calorieGoal: profile?.daily_calorie_goal,
+            proteinConsumed: todayTotals.protein,
+            proteinGoal: profile?.daily_protein_goal
+          }} 
+        />
+
         {/* Today's Summary */}
         <div className="glass-card p-4 space-y-4">
           <div className="flex items-center justify-between">
@@ -127,10 +133,8 @@ export default function Diet() {
               </span>
             </div>
           </div>
-          {/* ... Rest of the JSX is identical to original ... */}
-
+          
           <div className="grid grid-cols-3 gap-4">
-            {/* ... Copy the rest of the render logic from original file ... */}
             <div className="text-center">
               <p className="text-lg font-bold">
                 {Math.round(todayTotals.protein)}g
@@ -163,15 +167,14 @@ export default function Diet() {
             ))}
           </div>
         </div>
-        {/* ... Dialog components ... */}
       </div>
+
       {/* Add Food Dialog */}
       <Dialog open={showAddFood} onOpenChange={setShowAddFood}>
         <DialogContent className="glass-card max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Log Food</DialogTitle>
           </DialogHeader>
-          {/* ... Dialog Content ... */}
           {!selectedFood ? (
             <div className="space-y-2">
               <Input
@@ -183,7 +186,7 @@ export default function Diet() {
                 <div
                   key={food.id}
                   onClick={() => setSelectedFood(food)}
-                  className="p-2 cursor-pointer"
+                  className="p-2 cursor-pointer hover:bg-white/5 rounded"
                 >
                   {food.name}
                 </div>

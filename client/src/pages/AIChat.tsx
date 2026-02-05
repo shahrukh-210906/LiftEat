@@ -82,7 +82,7 @@ export default function AIChat() {
           id: (Date.now() + 1).toString(),
           user_id: 'ai',
           role: 'assistant',
-          content: data.content,
+          content: data.reply, // <--- ✅ CHANGED to matches backend
           created_at: new Date().toISOString()
         }
       ]);

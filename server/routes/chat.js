@@ -1,51 +1,76 @@
+// server/routes/chat.js
 const express = require('express');
 const router = express.Router();
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const ChatMessage = require('../models/ChatMessage');
-const auth = require('../middleware/auth'); // You'll need a simple JWT middleware
+const { Ollama } = require('ollama');
+const auth = require('../middleware/auth');
+const Profile = require('../models/Profile');
+const WorkoutSession = require('../models/WorkoutSession');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize connection to your local AI
+const ollama = new Ollama({ host: 'http://127.0.0.1:11434' });
 
+// @route   POST api/chat
+// @desc    Chat with Local Llama 3.1 (Context Aware)
 router.post('/', auth, async (req, res) => {
   try {
-    const { message, profile } = req.body;
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const { message } = req.body;
 
-    // 1. Construct System Prompt (Ported from your edge function)
-    let systemPrompt = `You are an expert fitness coach called GymFlow AI. 
-    Profile: ${profile ? JSON.stringify(profile) : 'Not specified'}.
-    Provide concise, action-oriented advice backed by fitness science.`;
+    // 1. GET USER CONTEXT (The "Smart" Part)
+    // We fetch real data so the AI knows who it's talking to
+    const profile = await Profile.findOne({ user: req.user.id });
+    const lastWorkout = await WorkoutSession.findOne({ user: req.user.id })
+      .sort({ date: -1 })
+      .limit(1);
 
-    // 2. Start Chat History (Load last few messages for context if needed)
-    const chat = model.startChat({
-      history: [
-        { role: "user", parts: [{ text: systemPrompt }] },
-        { role: "model", parts: [{ text: "Understood. I am ready to assist with fitness goals." }] }
+    // 2. CREATE THE PERSONA
+    const systemPrompt = `
+      You are 'LiftEat Coach', an expert fitness assistant.
+      
+      USER DETAILS:
+      - Name: ${req.user.name || 'Athlete'}
+      - Goal: ${profile?.fitness_goal || 'General Fitness'}
+      - Experience: ${profile?.experience_level || 'Beginner'}
+      - Weight: ${profile?.weight_kg ? profile.weight_kg + 'kg' : 'Unknown'}
+      
+      LAST WORKOUT:
+      ${lastWorkout 
+        ? `User did '${lastWorkout.name}' on ${new Date(lastWorkout.date).toDateString()}.` 
+        : "User has no recent workout history."}
+
+      RULES:
+      1. Keep answers concise (under 4 sentences) unless asked for a plan.
+      2. Be motivating but factual.
+      3. If the user asks "What should I do today?", suggest a workout based on their goal.
+    `;
+
+    console.log("... Asking Llama 3.1 ...");
+
+    // 3. SEND TO LOCAL GPU
+    const response = await ollama.chat({
+      model: 'llama3.1', // Ensure this matches the model you downloaded
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
       ],
     });
 
-    // 3. Save User Message
-    await ChatMessage.create({ user: req.user.id, role: 'user', content: message });
+    // 4. SEND REPLY TO FRONTEND
+    console.log("✅ Llama Replied!");
+    // We send the answer back as 'reply'
+    res.json({ reply: response.message.content });
 
-    // 4. Generate Response
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    const text = response.text();
-
-    // 5. Save Assistant Message
-    await ChatMessage.create({ user: req.user.id, role: 'assistant', content: text });
-
-    res.json({ content: text });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'AI Error' });
+  } catch (err) {
+    console.error("❌ AI Error:", err.message);
+    
+    // Fallback if Ollama is not running
+    if (err.code === 'ECONNREFUSED') {
+      return res.status(503).json({ 
+        reply: "⚠️ My brain is asleep! (Please ensure Ollama is running on your PC)." 
+      });
+    }
+    
+    res.status(500).send('Server Error');
   }
-});
-
-// Get History
-router.get('/history', auth, async (req, res) => {
-  const messages = await ChatMessage.find({ user: req.user.id }).sort({ createdAt: 1 });
-  res.json(messages);
 });
 
 module.exports = router;
