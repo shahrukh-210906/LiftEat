@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Activity, Flame, Target } from "lucide-react";
+import { Activity, Flame, Zap, Trophy } from "lucide-react"; // Changed icons slightly for variety
 import { AppLayout } from "../components/layout/AppLayout";
 import { StatsCard } from "../components/dashboard/StatsCard";
 import { MacroProgress } from "../components/dashboard/MacroProgress";
 import { QuickActions } from "../components/dashboard/QuickActions";
-import { LastWorkout } from "../components/dashboard/LastWorkout";
-import { AICoachWidget } from "../components/AICoachWidget"; // <-- IMPORT
+import { AICoachWidget } from "../components/AICoachWidget";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../lib/api";
 import { WorkoutSession, DietLog } from "../lib/types";
@@ -13,21 +12,17 @@ import { WorkoutSession, DietLog } from "../lib/types";
 export default function Dashboard() {
   const { user, profile } = useAuth();
   const [lastWorkout, setLastWorkout] = useState<WorkoutSession | null>(null);
-  const [exerciseCount, setExerciseCount] = useState(0);
   const [todaysDiet, setTodaysDiet] = useState<DietLog[]>([]);
   const [workoutCount, setWorkoutCount] = useState(0);
 
   useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
+    if (user) fetchDashboardData();
   }, [user]);
 
   const fetchDashboardData = async () => {
     try {
       const { data } = await api.get("/dashboard/stats");
       setLastWorkout(data.lastWorkout);
-      setExerciseCount(data.lastWorkoutExerciseCount);
       setTodaysDiet(data.todaysDiet);
       setWorkoutCount(data.weeklyWorkoutCount);
     } catch (error) {
@@ -47,83 +42,126 @@ export default function Dashboard() {
 
   const firstName = profile?.full_name?.split(" ")[0] || "Athlete";
 
-  // Data for AI Context
-  const dashboardContext = {
-    user: firstName,
-    goal: profile?.fitness_goal,
-    caloriesToday: todayTotals.calories,
-    workoutsThisWeek: workoutCount,
-    lastWorkoutName: lastWorkout?.name || "None"
-  };
-
   return (
     <AppLayout>
-      <div className="p-4 space-y-6 max-w-lg mx-auto">
-        <div className="pt-4">
-          <p className="text-muted-foreground text-sm">Welcome back,</p>
-          <h1 className="text-2xl font-bold">
-            <span className="text-gradient">{firstName}</span> 💪
-          </h1>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Header Section */}
+        <div className="flex items-center justify-between px-2">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Hello, {firstName}
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Ready to crush your goals today?
+            </p>
+          </div>
+          {/* Subtle profile badge or date could go here */}
         </div>
 
-        {/* --- AI WIDGET --- */}
-        <AICoachWidget page="dashboard" contextData={dashboardContext} />
+        {/* AI Widget - Keeps functionality but minimal style */}
+        <div className="bg-transparent">
+          <AICoachWidget page="dashboard" contextData={{ user: firstName }} />
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
-            icon={<Flame />}
+            icon={<Flame className="w-6 h-6" />}
             title="Calories"
             value={todayTotals.calories}
-            subtitle={`of ${profile?.daily_calorie_goal || 2000}`}
+            subtitle={`/ ${profile?.daily_calorie_goal || 2000} kcal`}
             trend={todayTotals.calories > 0 ? "up" : "neutral"}
           />
           <StatsCard
-            icon={<Activity />}
+            icon={<Activity className="w-6 h-6" />}
             title="Workouts"
             value={workoutCount}
-            subtitle="this week"
+            subtitle="Sessions this week"
             trend={workoutCount >= 3 ? "up" : "neutral"}
+          />
+          <StatsCard
+            icon={<Zap className="w-6 h-6" />}
+            title="Active Streak"
+            value="3 Days"
+            subtitle="Keep it up!"
+          />
+          <StatsCard
+            icon={<Trophy className="w-6 h-6" />}
+            title="Weight"
+            value={`${profile?.weight_kg || "-"} kg`}
+            subtitle="Current weight"
           />
         </div>
 
-        <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">
-            Quick Actions
-          </h2>
-          <QuickActions />
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Quick Actions & Last Workout */}
+          <div className="lg:col-span-2 space-y-8">
+            <section>
+              <h2 className="text-lg font-bold text-gray-900 mb-4 px-2">
+                Quick Start
+              </h2>
+              <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-gray-100">
+                <QuickActions />
+              </div>
+            </section>
 
-        <div className="glass-card p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold">Today's Nutrition</h2>
-            <Target className="w-4 h-4 text-primary" />
+            <section>
+              <h2 className="text-lg font-bold text-gray-900 mb-4 px-2">
+                Last Session
+              </h2>
+              {lastWorkout ? (
+                <div className="group flex items-center justify-between p-6 rounded-3xl bg-white/80 border border-gray-100 hover:border-gray-300 transition-all cursor-pointer">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {lastWorkout.name}
+                    </h3>
+                    <p className="text-gray-500 text-sm mt-1">
+                      {new Date(lastWorkout.date).toLocaleDateString()} •{" "}
+                      {lastWorkout.duration_minutes} mins
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-gray-900 group-hover:text-white transition-colors">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 text-gray-400 text-center border-2 border-dashed border-gray-100 rounded-3xl">
+                  No recent workouts found.
+                </div>
+              )}
+            </section>
           </div>
-          <div className="space-y-4">
-            <MacroProgress
-              label="Protein"
-              current={Math.round(todayTotals.protein)}
-              goal={profile?.daily_protein_goal || 150}
-              unit="g"
-              color="primary"
-            />
-            <MacroProgress
-              label="Carbs"
-              current={Math.round(todayTotals.carbs)}
-              goal={profile?.daily_carbs_goal || 200}
-              unit="g"
-              color="accent"
-            />
-            <MacroProgress
-              label="Fat"
-              current={Math.round(todayTotals.fat)}
-              goal={profile?.daily_fat_goal || 65}
-              unit="g"
-              color="warning"
-            />
+
+          {/* Right Column: Nutrition */}
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 px-2">
+              Nutrition
+            </h2>
+            <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-gray-100 space-y-6 hover:border-gray-300 hover:text-gray-900 hover:transition-all">
+              <MacroProgress
+                label="Protein"
+                current={Math.round(todayTotals.protein)}
+                goal={profile?.daily_protein_goal || 150}
+                unit="g"
+                color="primary"
+              />
+              <MacroProgress
+                label="Carbs"
+                current={Math.round(todayTotals.carbs)}
+                goal={profile?.daily_carbs_goal || 200}
+                unit="g"
+                color="accent"
+              />
+              <MacroProgress
+                label="Fat"
+                current={Math.round(todayTotals.fat)}
+                goal={profile?.daily_fat_goal || 65}
+                unit="g"
+                color="warning"
+              />
+            </div>
           </div>
         </div>
-
-        <LastWorkout workout={lastWorkout} exerciseCount={exerciseCount} />
       </div>
     </AppLayout>
   );

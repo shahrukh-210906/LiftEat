@@ -14,6 +14,7 @@ import Diet from "./pages/Diet";
 import AIChat from "./pages/AIChat";
 import Profile from "./pages/Profile";
 import NotFound from "@/pages/NotFound";
+import ExerciseDetails from "@/pages/ExerciseDetails"; // Import the new page
 
 const queryClient = new QueryClient();
 
@@ -23,15 +24,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!user) return <Navigate to="/auth" replace />;
-
-  // Optional: Redirect to onboarding if not complete
-  // if (profile && !profile.onboarding_complete) return <Navigate to="/onboarding" replace />;
 
   return <>{children}</>;
 }
@@ -56,6 +54,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      {/* Workout Library */}
       <Route
         path="/workout"
         element={
@@ -64,14 +63,16 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      {/* Exercise Details (NEW) */}
       <Route
-        path="/workout/new"
+        path="/exercises/:id"
         element={
           <ProtectedRoute>
-            <Workout />
+            <ExerciseDetails />
           </ProtectedRoute>
         }
       />
+      {/* Active Workout Session */}
       <Route
         path="/workout/:id"
         element={
