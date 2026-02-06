@@ -12,8 +12,16 @@ const WorkoutRoutineSchema = new mongoose.Schema({
   },
   exercises: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'exercise' // Must match your Exercise model name
+      exercise: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Exercise', // <--- MAKE SURE THIS MATCHES YOUR EXERCISE MODEL NAME EXACTLY
+        required: true
+      },
+      sets: {
+        type: Number,
+        default: 3,
+        required: true
+      }
     }
   ],
   created_at: {

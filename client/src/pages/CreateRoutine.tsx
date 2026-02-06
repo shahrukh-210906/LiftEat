@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useWorkoutLibrary } from "@/hooks/useWorkoutLibrary";
-import { Search, Plus, Save, X, Dumbbell, Info, Eye } from "lucide-react";
+import { Search, Plus, Save, X, Dumbbell, Eye, ChevronUp, ChevronDown } from "lucide-react"; // Added Chevrons
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -12,28 +12,49 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet"; // Ensure you have this shadcn component
+} from "@/components/ui/sheet";
 
 const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Abs", "Cardio"];
+
+// Define a type for the selected exercise extended with sets
+interface SelectedExercise {
+  _id: string;
+  name: string;
+  bodyPart: string;
+  sets: number; // Added sets property
+}
 
 export default function CreateRoutine() {
   const navigate = useNavigate();
   const [routineName, setRoutineName] = useState("");
-  const { exercises, query, setQuery, category, setCategory, loading } = useWorkoutLibrary();
-  const [selectedExercises, setSelectedExercises] = useState<any[]>([]);
+  const { exercises, query, setQuery, category, setCategory } = useWorkoutLibrary();
   
-  // State for Preview Drawer
+  // Update state type
+  const [selectedExercises, setSelectedExercises] = useState<SelectedExercise[]>([]);
+  
   const [previewExercise, setPreviewExercise] = useState<any | null>(null);
 
   const toggleExercise = (ex: any) => {
-    setSelectedExercises(prev => 
-      prev.find(item => item._id === ex._id) 
-        ? prev.filter(item => item._id !== ex._id) 
-        : [...prev, ex]
-    );
+    setSelectedExercises(prev => {
+      const exists = prev.find(item => item._id === ex._id);
+      if (exists) {
+        return prev.filter(item => item._id !== ex._id);
+      } else {
+        // Initialize with default 3 sets
+        return [...prev, { ...ex, sets: 3 }]; 
+      }
+    });
+  };
+
+  // New function to update sets
+  const updateSets = (id: string, delta: number) => {
+    setSelectedExercises(prev => prev.map(ex => {
+      if (ex._id === id) {
+        const newSets = Math.max(1, ex.sets + delta); // Prevent sets < 1
+        return { ...ex, sets: newSets };
+      }
+      return ex;
+    }));
   };
 
   const saveRoutine = async () => {
@@ -41,9 +62,13 @@ export default function CreateRoutine() {
     if (selectedExercises.length === 0) return toast.error("Add at least one exercise");
 
     try {
+      // Payload structure matches what we defined in the backend route
       await api.post('/workouts/routines', {
         name: routineName,
-        exercises: selectedExercises.map(ex => ex._id)
+        exercises: selectedExercises.map(ex => ({
+          _id: ex._id,
+          sets: ex.sets
+        }))
       });
       toast.success("Routine saved to library!");
       navigate('/workout');
@@ -71,14 +96,14 @@ export default function CreateRoutine() {
 
         <div className="flex flex-col md:flex-row gap-6 h-full overflow-hidden">
           
-          {/* Exercise Library */}
+          {/* Exercise Library (Left Side) - UNCHANGED mostly, just type safety */}
           <div className="flex-1 flex flex-col glass-card overflow-hidden">
             <div className="p-4 border-b border-gray-100">
                <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input 
                   className="pl-10 bg-gray-50 border-none rounded-xl" 
-                  placeholder="Search..." 
+                  placeholder="Search exercises..." 
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -109,7 +134,7 @@ export default function CreateRoutine() {
                         isSelected ? "bg-black text-white border-black" : "bg-white border-gray-100"
                       }`}
                     >
-                      <div className="flex items-center gap-3 flex-1" onClick={() => toggleExercise(ex)}>
+                      <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => toggleExercise(ex)}>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? "bg-white/10" : "bg-gray-50"}`}>
                           <Dumbbell className="w-5 h-5" />
                         </div>
@@ -119,7 +144,6 @@ export default function CreateRoutine() {
                         </div>
                       </div>
                       
-                      {/* PREVIEW BUTTON */}
                       <div className="flex items-center gap-1">
                         <Button 
                           variant="ghost" 
@@ -148,19 +172,47 @@ export default function CreateRoutine() {
             </ScrollArea>
           </div>
 
-          {/* Routine Sidebar */}
+          {/* Routine Sidebar (Right Side) - UPDATED with Sets Control */}
           <div className="w-full md:w-80 flex flex-col bg-gray-50 rounded-3xl overflow-hidden border border-dashed border-gray-200">
             <div className="p-6">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Your Routine</h3>
             </div>
             <ScrollArea className="flex-1 px-4">
-              <div className="space-y-2 pb-4">
-                {selectedExercises.map((ex) => (
-                  <div key={ex._id} className="bg-white p-3 rounded-xl border border-gray-100 flex items-center justify-between">
-                    <p className="font-bold text-xs truncate w-40">{ex.name}</p>
-                    <button onClick={() => toggleExercise(ex)}><X className="w-3 h-3 text-gray-300" /></button>
+              <div className="space-y-3 pb-4">
+                {selectedExercises.length === 0 ? (
+                  <div className="text-center p-8 text-gray-400 text-sm">
+                    No exercises added yet.
                   </div>
-                ))}
+                ) : (
+                  selectedExercises.map((ex) => (
+                    <div key={ex._id} className="bg-white p-3 rounded-xl border border-gray-100 flex flex-col gap-3 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-xs truncate w-40">{ex.name}</p>
+                        <button onClick={() => toggleExercise(ex)}><X className="w-3 h-3 text-gray-300 hover:text-red-500" /></button>
+                      </div>
+                      
+                      {/* Sets Control */}
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                        <span className="text-[10px] font-bold uppercase text-gray-400">Sets</span>
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={() => updateSets(ex._id, -1)}
+                            className="w-5 h-5 flex items-center justify-center bg-white rounded-md shadow-sm border border-gray-200 hover:bg-gray-100"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                          <span className="font-bold text-sm w-4 text-center">{ex.sets}</span>
+                          <button 
+                            onClick={() => updateSets(ex._id, 1)}
+                            className="w-5 h-5 flex items-center justify-center bg-white rounded-md shadow-sm border border-gray-200 hover:bg-gray-100"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </ScrollArea>
           </div>

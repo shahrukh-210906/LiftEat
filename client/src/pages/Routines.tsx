@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Dumbbell, MoreVertical } from "lucide-react";
+import { Plus, Play, Dumbbell, MoreVertical, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Routines() {
   const navigate = useNavigate();
@@ -33,6 +39,16 @@ export default function Routines() {
       navigate(`/workout/${data._id}`);
     } catch (error) {
       toast.error("Failed to start workout");
+    }
+  };
+
+  const deleteRoutine = async (id: string) => {
+    try {
+      await api.delete(`/workouts/routines/${id}`);
+      setRoutines((prev) => prev.filter((r) => r._id !== id));
+      toast.success("Routine deleted");
+    } catch (error) {
+      toast.error("Failed to delete routine");
     }
   };
 
@@ -65,7 +81,7 @@ export default function Routines() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {routines.map((routine) => (
-              <div key={routine._id} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+              <div key={routine._id} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group relative">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-black capitalize">{routine.name}</h3>
@@ -73,15 +89,33 @@ export default function Routines() {
                       {routine.exercises?.length || 0} Exercises
                     </p>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <MoreVertical className="w-4 h-4 text-gray-400" />
-                  </Button>
+
+                  {/* Dropdown Menu for Actions */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 -mr-2">
+                        <MoreVertical className="w-4 h-4 text-gray-400" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32 rounded-xl">
+                      <DropdownMenuItem 
+                        className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer font-bold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteRoutine(routine._id);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {routine.exercises?.slice(0, 3).map((ex: any, i: number) => (
+                  {routine.exercises?.slice(0, 3).map((item: any, i: number) => (
+                    // Handle both new {exercise: {...}} structure and old fallback
                     <Badge key={i} variant="secondary" className="bg-gray-50 text-[10px] uppercase">
-                      {ex.name}
+                      {item.exercise?.name || item.name || "Exercise"}
                     </Badge>
                   ))}
                   {routine.exercises?.length > 3 && (

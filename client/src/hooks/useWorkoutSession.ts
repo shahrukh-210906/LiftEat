@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { WorkoutSession, WorkoutExercise } from "@/lib/types";
+// We use 'any' for sets here to avoid strict type conflicts with the legacy types file
+// You should eventually update your types.ts to match the new backend model perfectly.
 
 export function useWorkoutSession(workoutId?: string) {
   const navigate = useNavigate();
-  const [workout, setWorkout] = useState<WorkoutSession | null>(null);
-  const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
+  const [workout, setWorkout] = useState<any | null>(null);
+  const [exercises, setExercises] = useState<any[]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [workoutName, setWorkoutName] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const fetchWorkout = async () => {
     if (!workoutId) return;
@@ -18,26 +20,39 @@ export function useWorkoutSession(workoutId?: string) {
       setWorkout(data.session);
       setWorkoutName(data.session.name);
       setExercises(data.exercises);
+      
+      // Calculate elapsed time based on server start time
+      if (data.session.started_at) {
+        const start = new Date(data.session.started_at).getTime();
+        const now = Date.now();
+        setElapsedTime(Math.floor((now - start) / 1000));
+      }
     } catch (error: any) {
       console.error("Failed to load workout:", error);
-      // [FIX] Handle 404 by redirecting to safety
       if (error.response?.status === 404) {
-        toast.error("This workout session no longer exists.");
-        navigate("/workout"); // Redirect to the library
-      } else {
-        toast.error("Error loading workout details");
+        toast.error("Workout not found");
+        navigate("/workout");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   const addSet = async (exerciseId: string, reps: number, weight: number) => {
     try {
-      await api.post(`/workouts/exercises/${exerciseId}/sets`, {
+      // Optimistic UI update (optional, but makes it snappy)
+      // For now, we'll just wait for the server response to ensure ID sync
+      const { data: updatedExercise } = await api.post(`/workouts/exercises/${exerciseId}/sets`, {
         reps,
         weight,
       });
-      await fetchWorkout();
-      toast.success("Set logged!");
+
+      // Update local state without full refetch
+      setExercises(prev => prev.map(ex => 
+        ex._id === exerciseId ? updatedExercise : ex
+      ));
+      
+      toast.success("Set logged");
     } catch (error) {
       toast.error("Could not add set");
     }
@@ -45,8 +60,13 @@ export function useWorkoutSession(workoutId?: string) {
 
   const deleteSet = async (exerciseId: string, setId: string) => {
     try {
-      await api.delete(`/workouts/exercises/${exerciseId}/sets/${setId}`);
-      await fetchWorkout();
+      const { data: updatedExercise } = await api.delete(`/workouts/exercises/${exerciseId}/sets/${setId}`);
+      
+      // Update local state
+      setExercises(prev => prev.map(ex => 
+        ex._id === exerciseId ? updatedExercise : ex
+      ));
+      
       toast.success("Set removed");
     } catch (error) {
       toast.error("Could not delete set");
@@ -61,7 +81,7 @@ export function useWorkoutSession(workoutId?: string) {
         duration_minutes: Math.floor(elapsedTime / 60),
       });
       toast.success("Workout completed! 💪");
-      navigate("/workout");
+      navigate("/dashboard");
     } catch (error) {
       toast.error("Failed to finish workout");
     }
@@ -72,8 +92,7 @@ export function useWorkoutSession(workoutId?: string) {
     let interval: any;
     if (workout?.is_active) {
       interval = setInterval(() => {
-        const startTime = new Date(workout.started_at).getTime();
-        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+        setElapsedTime(prev => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -95,5 +114,6 @@ export function useWorkoutSession(workoutId?: string) {
     addSet,
     deleteSet,
     finishWorkout,
+    loading
   };
 }
