@@ -18,8 +18,15 @@ export function useWorkoutSession(workoutId?: string) {
       setWorkout(data.session);
       setWorkoutName(data.session.name);
       setExercises(data.exercises);
-    } catch (error) {
-      toast.error("Error loading workout");
+    } catch (error: any) {
+      console.error("Failed to load workout:", error);
+      // [FIX] Handle 404 by redirecting to safety
+      if (error.response?.status === 404) {
+        toast.error("This workout session no longer exists.");
+        navigate("/workout"); // Redirect to the library
+      } else {
+        toast.error("Error loading workout details");
+      }
     }
   };
 
@@ -33,6 +40,16 @@ export function useWorkoutSession(workoutId?: string) {
       toast.success("Set logged!");
     } catch (error) {
       toast.error("Could not add set");
+    }
+  };
+
+  const deleteSet = async (exerciseId: string, setId: string) => {
+    try {
+      await api.delete(`/workouts/exercises/${exerciseId}/sets/${setId}`);
+      await fetchWorkout();
+      toast.success("Set removed");
+    } catch (error) {
+      toast.error("Could not delete set");
     }
   };
 
@@ -50,6 +67,7 @@ export function useWorkoutSession(workoutId?: string) {
     }
   };
 
+  // Timer logic
   useEffect(() => {
     let interval: any;
     if (workout?.is_active) {
@@ -61,8 +79,11 @@ export function useWorkoutSession(workoutId?: string) {
     return () => clearInterval(interval);
   }, [workout]);
 
+  // Initial fetch
   useEffect(() => {
-    fetchWorkout();
+    if (workoutId) {
+      fetchWorkout();
+    }
   }, [workoutId]);
 
   return {
@@ -72,6 +93,7 @@ export function useWorkoutSession(workoutId?: string) {
     setWorkoutName,
     elapsedTime,
     addSet,
+    deleteSet,
     finishWorkout,
   };
 }

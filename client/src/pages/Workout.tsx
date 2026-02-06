@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/badge";
-import { Search, Dumbbell, Play, ArrowUpRight, Heart, Plus } from "lucide-react";
+// ADDED: List icon for the new button
+import { Search, Dumbbell, Play, ArrowUpRight, Heart, Plus, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -18,10 +19,8 @@ export default function Workout() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   
-  // State to track favorite exercise IDs
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-  // Fetch Exercises based on search and category
   useEffect(() => {
     const fetch = async () => {
        const params = new URLSearchParams();
@@ -37,7 +36,6 @@ export default function Workout() {
     fetch();
   }, [query, category]);
 
-  // Logic for Quick Start: Initializes a new session via the library hook
   const handleQuickStart = async () => {
     try {
       await startSession("Quick Start Workout");
@@ -46,12 +44,15 @@ export default function Workout() {
     }
   };
 
-  // Logic for Create Routine: Navigates to the routine builder
   const handleCreateRoutine = () => {
     navigate('/routines/new');
   };
 
-  // Handle Favorite Toggle
+  // ADDED: Handler for viewing routines
+  const handleViewRoutines = () => {
+    navigate('/routines');
+  };
+
   const toggleFavorite = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); 
     setFavorites(prev => {
@@ -71,7 +72,6 @@ export default function Workout() {
     <AppLayout>
        <div className="space-y-8 animate-in fade-in duration-700">
          
-         {/* Hero Section with Action Buttons */}
          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
            <div className="space-y-2">
              <h1 className="text-4xl md:text-5xl font-black text-black tracking-tight">
@@ -83,6 +83,15 @@ export default function Workout() {
            </div>
            
            <div className="flex flex-wrap gap-3">
+             {/* ADDED: View Routines Button */}
+             <Button 
+               variant="outline"
+               onClick={handleViewRoutines}
+               className="h-12 px-6 border-2 border-black text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95"
+             >
+               <List className="w-4 h-4 mr-2" /> My Routines
+             </Button>
+
              <Button 
                variant="outline"
                onClick={handleCreateRoutine}
@@ -100,6 +109,8 @@ export default function Workout() {
            </div>
          </div>
 
+         {/* ... Rest of the component (Floating Filter Bar, Grid Layout) remains unchanged ... */}
+         
          {/* Floating Filter Bar */}
          <div className="sticky top-6 z-30 glass-card p-2 flex flex-col md:flex-row gap-2 items-center shadow-xl shadow-black/5">
             <div className="relative flex-1 w-full min-w-0">
@@ -129,7 +140,6 @@ export default function Workout() {
             </div>
          </div>
 
-         {/* Enhanced Grid Layout with Glassmorphism Cards */}
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
            {exercises.map((ex) => {
              const isFav = favorites.has(ex._id);
@@ -140,7 +150,6 @@ export default function Workout() {
                  onClick={() => navigate(`/exercises/${ex._id}`)}
                  className="group relative h-64 rounded-3xl overflow-hidden cursor-pointer bg-neutral-900 border border-white/10 transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 hover:-translate-y-1"
                >
-                 {/* Background Image with Zoom Effect */}
                  <div className="absolute inset-0 z-0">
                    <img 
                      src={ex.images?.[0] || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop"} 
@@ -150,7 +159,6 @@ export default function Workout() {
                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                  </div>
 
-                 {/* Top Action Row */}
                  <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
                    <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20 px-3 py-1 uppercase text-[10px] tracking-widest">
                      {ex.bodyPart}
@@ -169,7 +177,6 @@ export default function Workout() {
                    </button>
                  </div>
 
-                 {/* Bottom Content (Glassmorphism) */}
                  <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
                    <div className="space-y-2">
                      <h3 className="text-2xl font-black text-white leading-none tracking-tight transition-colors group-hover:text-blue-400">
@@ -191,7 +198,6 @@ export default function Workout() {
                    </div>
                  </div>
 
-                 {/* "View Details" Hover Overlay */}
                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
                    <div className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
                      View Details <ArrowUpRight className="w-4 h-4" />

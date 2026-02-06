@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trophy, Plus, Check } from "lucide-react";
+// [NEW] Import Trash2 icon
+import { Trophy, Plus, Check, Trash2 } from "lucide-react";
 import { useWorkoutSession } from "@/hooks/useWorkoutSession";
 import { WorkoutHeader } from "@/components/workout/WorkoutHeader";
 
@@ -16,10 +17,10 @@ export default function WorkoutSession() {
     setWorkoutName,
     elapsedTime,
     addSet,
+    deleteSet, // [NEW] Destructure deleteSet
     finishWorkout,
   } = useWorkoutSession(id);
 
-  // Local state for current set inputs
   const [inputs, setInputs] = useState<Record<string, { reps: string; weight: string }>>({});
 
   const handleInputChange = (exId: string, field: 'reps' | 'weight', value: string) => {
@@ -48,10 +49,23 @@ export default function WorkoutSession() {
               {/* History of Sets */}
               <div className="space-y-2">
                 {exercise.sets?.map((set, i) => (
-                  <div key={i} className="flex items-center justify-between bg-white/5 p-3 rounded-xl text-sm">
-                    <span className="text-zinc-500 font-bold">SET {i + 1}</span>
-                    <span className="text-white font-black">{set.weight}kg × {set.reps}</span>
-                    <Check className="w-4 h-4 text-green-500" />
+                  <div key={set._id || i} className="flex items-center justify-between bg-white/5 p-3 rounded-xl text-sm group">
+                    <div className="flex items-center gap-4">
+                       <span className="text-zinc-500 font-bold w-12">SET {i + 1}</span>
+                       <span className="text-white font-black text-lg">{set.weight}kg × {set.reps}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Check className="w-5 h-5 text-green-500" />
+                      
+                      {/* [NEW] Delete Button */}
+                      <button 
+                        onClick={() => deleteSet(exercise._id, set._id)}
+                        className="p-2 rounded-full hover:bg-red-500/20 text-zinc-600 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -78,6 +92,7 @@ export default function WorkoutSession() {
                     const weight = parseFloat(inputs[exercise._id]?.weight || "0");
                     const reps = parseInt(inputs[exercise._id]?.reps || "0");
                     addSet(exercise._id, reps, weight);
+                    // Clear inputs
                     handleInputChange(exercise._id, 'weight', "");
                     handleInputChange(exercise._id, 'reps', "");
                   }}
