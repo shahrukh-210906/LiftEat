@@ -1,3 +1,4 @@
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { cn } from "@/lib/utils";
 
 interface StatsProps {
@@ -13,10 +14,10 @@ interface StatsProps {
 }
 
 const CATEGORIES = [
-  { key: 'EFFECTIVE', label: 'Super Effective', color: 'bg-black' },
-  { key: 'MODERATE', label: 'Felt a bit', color: 'bg-gray-400' },
-  { key: 'NO_FEEL', label: "Didn't feel anything", color: 'bg-gray-200' },
-  { key: 'INJURED', label: 'Injured', color: 'bg-red-500' }, // Keep red for safety warning
+  { key: 'EFFECTIVE', label: 'Effective', color: '#000000' },
+  { key: 'MODERATE', label: 'Moderate', color: '#9CA3AF' },
+  { key: 'NO_FEEL', label: 'No Feel', color: '#E5E7EB' },
+  { key: 'INJURED', label: 'Injured', color: '#EF4444' },
 ];
 
 export function ExerciseStats({ stats }: StatsProps) {
@@ -30,38 +31,54 @@ export function ExerciseStats({ stats }: StatsProps) {
     );
   }
 
+  // Transform data for the chart
+  const data = CATEGORIES.map(cat => ({
+    name: cat.label,
+    // @ts-ignore
+    value: stats?.counts?.[cat.key] || 0,
+    color: cat.color
+  }));
+
   return (
-    <div className="w-full py-4 space-y-3">
-      <div className="flex items-baseline justify-between">
+    <div className="w-full py-6 space-y-4">
+      <div className="flex items-baseline justify-between px-2">
         <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">Community Feedback</h3>
         <span className="text-xs font-bold text-black">{total} Votes</span>
       </div>
 
-      <div className="space-y-2">
-        {CATEGORIES.map((cat) => {
-          // @ts-ignore - Dynamic key access
-          const count = stats?.counts?.[cat.key] || 0;
-          const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-
-          return (
-            <div key={cat.key} className="group flex items-center gap-3 text-sm">
-              <div className="w-32 flex-shrink-0 font-medium text-gray-600 group-hover:text-black transition-colors">
-                {cat.label}
-              </div>
-              
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={cn("h-full rounded-full transition-all duration-1000 ease-out", cat.color)} 
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-              
-              <div className="w-8 text-right font-bold text-xs text-gray-400 group-hover:text-black">
-                {percent}%
-              </div>
-            </div>
-          );
-        })}
+      {/* Modern Canvas-based Chart Container */}
+      <div className="bg-white/50 rounded-3xl p-4 border border-gray-100 shadow-sm">
+        <div style={{ width: '100%', height: 200 }}>
+          <ResponsiveContainer>
+            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 700 }} 
+              />
+              <YAxis hide domain={[0, 'dataMax + 1']} />
+              <Tooltip 
+                cursor={{ fill: 'transparent' }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-black text-white px-3 py-1 rounded-full text-[10px] font-bold">
+                        {payload[0].value} votes
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar dataKey="value" radius={[6, 6, 6, 6]} barSize={40}>
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

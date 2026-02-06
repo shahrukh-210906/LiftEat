@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { WorkoutSession, WorkoutExercise, ExerciseSet } from "@/lib/types";
+import { WorkoutSession, WorkoutExercise } from "@/lib/types";
 
 export function useWorkoutSession(workoutId?: string) {
   const navigate = useNavigate();
@@ -23,12 +23,14 @@ export function useWorkoutSession(workoutId?: string) {
     }
   };
 
-  const addSet = async (exerciseId: string, currentSets: ExerciseSet[]) => {
+  const addSet = async (exerciseId: string, reps: number, weight: number) => {
     try {
       await api.post(`/workouts/exercises/${exerciseId}/sets`, {
-        set_number: (currentSets?.length || 0) + 1,
+        reps,
+        weight,
       });
       await fetchWorkout();
+      toast.success("Set logged!");
     } catch (error) {
       toast.error("Could not add set");
     }
@@ -48,9 +50,8 @@ export function useWorkoutSession(workoutId?: string) {
     }
   };
 
-  // Timer Effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
     if (workout?.is_active) {
       interval = setInterval(() => {
         const startTime = new Date(workout.started_at).getTime();
@@ -70,8 +71,7 @@ export function useWorkoutSession(workoutId?: string) {
     workoutName,
     setWorkoutName,
     elapsedTime,
-    fetchWorkout,
     addSet,
-    finishWorkout
+    finishWorkout,
   };
 }

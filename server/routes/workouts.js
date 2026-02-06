@@ -1,97 +1,85 @@
-// server/routes/chat.js
 const express = require('express');
 const router = express.Router();
-const { Ollama } = require('ollama');
 const auth = require('../middleware/auth');
-const Profile = require('../models/Profile');
 const WorkoutSession = require('../models/WorkoutSession');
+const WorkoutExercise = require('../models/WorkoutExercise');
+const WorkoutRoutine = require('../models/WorkoutRoutine');
 
-// Initialize connection to your local AI
-const ollama = new Ollama({ host: 'http://127.0.0.1:11434' });
-
-// @route   POST api/chat/tip
-// @desc    Get a quick tip for the widget (Fixes 404)
-router.post('/tip', auth, async (req, res) => {
+// @route   GET api/workouts/routines
+// @desc    Get all routines for the logged-in user
+router.get('/routines', auth, async (req, res) => {
   try {
-    const { page, contextData } = req.body;
-    
-    // Quick prompt for speed
-    const prompt = `
-      Provide a single, short (max 15 words) motivating tip for a user on the ${page} page.
-      Context: ${JSON.stringify(contextData)}
-    `;
-
-    const response = await ollama.chat({
-      model: 'llama3.1',
-      messages: [{ role: 'user', content: prompt }],
-      stream: false
-    });
-
-    res.json({ tip: response.message.content });
+    const routines = await WorkoutRoutine.find({ user: req.user.id })
+      .sort({ created_at: -1 });
+    res.json(routines);
   } catch (err) {
-    // Silent fail for tips is better than crashing
-    console.error("Tip Error:", err.message);
-    res.json({ tip: "Stay consistent! 💪" });
+    console.error(err.message);
+    res.status(500).send('Server Error');
   }
 });
 
-// @route   POST api/chat
-// @desc    Chat with Local Llama 3.1 (Context Aware)
-router.post('/', auth, async (req, res) => {
+// @route   POST api/workouts/routines
+// @desc    Save a new custom workout routine
+router.post('/routines', auth, async (req, res) => {
   try {
-    const { message } = req.body;
-
-    // 1. GET USER CONTEXT
-    const profile = await Profile.findOne({ user: req.user.id });
-    const lastWorkout = await WorkoutSession.findOne({ user: req.user.id })
-      .sort({ date: -1 })
-      .limit(1);
-
-    // 2. CREATE THE PERSONA
-    const systemPrompt = `
-      You are 'LiftEat Coach', an expert fitness assistant.
-      
-      USER DETAILS:
-      - Name: ${req.user.name || 'Athlete'}
-      - Goal: ${profile?.fitness_goal || 'General Fitness'}
-      - Experience: ${profile?.experience_level || 'Beginner'}
-      - Weight: ${profile?.weight_kg ? profile.weight_kg + 'kg' : 'Unknown'}
-      
-      LAST WORKOUT:
-      ${lastWorkout 
-        ? `User did '${lastWorkout.name}' on ${new Date(lastWorkout.date).toDateString()}.` 
-        : "User has no recent workout history."}
-
-      RULES:
-      1. Keep answers concise (under 4 sentences) unless asked for a plan.
-      2. Be motivating but factual.
-      3. If the user asks "What should I do today?", suggest a workout based on their goal.
-    `;
-
-    console.log("... Asking Llama 3.1 ...");
-
-    // 3. SEND TO LOCAL GPU
-    const response = await ollama.chat({
-      model: 'llama3.1',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
-      ],
+    const { name, exercises } = req.body;
+    
+    // Expects exercises: [{ exercise: id, name, muscle_group, default_sets, default_reps }]
+    const newRoutine = new WorkoutRoutine({
+      user: req.user.id,
+      name,
+      exercises 
     });
 
-    // 4. SEND REPLY TO FRONTEND
-    console.log("✅ Llama Replied!");
-    res.json({ reply: response.message.content });
-
+    const routine = await newRoutine.save();
+    res.json(routine);
   } catch (err) {
-    console.error("❌ AI Error:", err.message);
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   POST api/workouts/exercises/:exerciseId/sets
+// @desc    Log a set with weight and reps
+router.post('/exercises/:exerciseId/sets', auth, async (req, res) => {
+  try {
+    const { reps, weight, set_number } = req.body;
+    const exercise = await WorkoutExercise.findById(req.params.exerciseId);
     
-    if (err.code === 'ECONNREFUSED') {
-      return res.status(503).json({ 
-        reply: "⚠️ My brain is asleep! (Please ensure Ollama is running on your PC)." 
-      });
-    }
-    
+    if (!exercise) return res.status(404).json({ msg: 'Exercise not found' });
+
+    exercise.sets.push({
+      set_number: set_number || exercise.sets.length + 1,
+      reps: reps || 0,
+      weight: weight || 0,
+      completed: true
+    });
+
+    await exercise.save();
+    res.json(exercise);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   POST api/workouts/start/:routineId
+// @desc    Start a session from a saved routine
+router.post('/start/:routineId', auth, async (req, res) => {
+  try {
+    const routine = await WorkoutRoutine.findById(req.params.routineId);
+    if (!routine) return res.status(404).json({ msg: "Routine not found" });
+
+    const newSession = new WorkoutSession({
+      user: req.user.id,
+      name: routine.name,
+      is_active: true,
+      started_at: new Date()
+    });
+
+    const session = await newSession.save();
+    res.json(session);
+  } catch (err) {
     res.status(500).send('Server Error');
   }
 });

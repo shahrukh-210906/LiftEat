@@ -5,16 +5,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
+// Page Imports
 import Auth from "./pages/Auth";
-import Onboarding from "@/pages/Onboarding";
+import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Workout from "./pages/Workout";
+import Routines from "./pages/Routines"; // New Page for viewing routines
+import CreateRoutine from "./pages/CreateRoutine"; // The builder page
 import WorkoutSession from "./pages/WorkoutSession";
 import Diet from "./pages/Diet";
 import AIChat from "./pages/AIChat";
 import Profile from "./pages/Profile";
-import NotFound from "@/pages/NotFound";
-import ExerciseDetails from "@/pages/ExerciseDetails"; // Import the new page
+import NotFound from "./pages/NotFound";
+import ExerciseDetails from "./pages/ExerciseDetails";
 
 const queryClient = new QueryClient();
 
@@ -30,7 +33,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <Navigate to="/auth" replace />;
-
   return <>{children}</>;
 }
 
@@ -38,73 +40,20 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
-      <Route
-        path="/onboarding"
-        element={
-          <ProtectedRoute>
-            <Onboarding />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      {/* Workout Library */}
-      <Route
-        path="/workout"
-        element={
-          <ProtectedRoute>
-            <Workout />
-          </ProtectedRoute>
-        }
-      />
-      {/* Exercise Details (NEW) */}
-      <Route
-        path="/exercises/:id"
-        element={
-          <ProtectedRoute>
-            <ExerciseDetails />
-          </ProtectedRoute>
-        }
-      />
-      {/* Active Workout Session */}
-      <Route
-        path="/workout/:id"
-        element={
-          <ProtectedRoute>
-            <WorkoutSession />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/diet"
-        element={
-          <ProtectedRoute>
-            <Diet />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ai-chat"
-        element={
-          <ProtectedRoute>
-            <AIChat />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      
+      {/* Workout System */}
+      <Route path="/workout" element={<ProtectedRoute><Workout /></ProtectedRoute>} />
+      <Route path="/routines" element={<ProtectedRoute><Routines /></ProtectedRoute>} />
+      <Route path="/routines/new" element={<ProtectedRoute><CreateRoutine /></ProtectedRoute>} />
+      <Route path="/exercises/:id" element={<ProtectedRoute><ExerciseDetails /></ProtectedRoute>} />
+      <Route path="/workout/:id" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
+
+      <Route path="/diet" element={<ProtectedRoute><Diet /></ProtectedRoute>} />
+      <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

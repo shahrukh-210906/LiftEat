@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const WorkoutRoutineSchema = new mongoose.Schema({
@@ -11,26 +10,16 @@ const WorkoutRoutineSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  exercises: [{
-    exercise: {
+  exercises: [
+    {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'exercise'
-    },
-    name: String,
-    muscle_group: String,
-    default_sets: {
-      type: Number,
-      default: 3
-    },
-    default_reps: {
-      type: Number,
-      default: 10
+      ref: 'exercise' // Must match your Exercise model name
     }
-  }],
+  ],
   created_at: {
     type: Date,
     default: Date.now
   }
 });
 
-module.exports = mongoose.model('workout_routine', WorkoutRoutineSchema);
+module.exports = mongoose.model('workoutRoutine', WorkoutRoutineSchema);

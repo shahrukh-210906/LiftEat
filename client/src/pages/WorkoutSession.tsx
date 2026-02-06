@@ -1,12 +1,11 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Trophy, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trophy, Plus, Check } from "lucide-react";
 import { useWorkoutSession } from "@/hooks/useWorkoutSession";
 import { WorkoutHeader } from "@/components/workout/WorkoutHeader";
-// Assuming you extract the exercise card similarly to the header
-// import { ExerciseCard } from "@/components/workout/ExerciseCard";
-// import { AddExerciseDialog } from "@/components/workout/AddExerciseDialog";
 
 export default function WorkoutSession() {
   const { id } = useParams<{ id: string }>();
@@ -20,12 +19,21 @@ export default function WorkoutSession() {
     finishWorkout,
   } = useWorkoutSession(id);
 
-  if (!workout)
-    return <div className="p-8 text-center text-white">Loading Workout...</div>;
+  // Local state for current set inputs
+  const [inputs, setInputs] = useState<Record<string, { reps: string; weight: string }>>({});
+
+  const handleInputChange = (exId: string, field: 'reps' | 'weight', value: string) => {
+    setInputs(prev => ({
+      ...prev,
+      [exId]: { ...prev[exId], [field]: value }
+    }));
+  };
+
+  if (!workout) return <div className="p-8 text-center text-white">Loading...</div>;
 
   return (
     <AppLayout hideNav>
-      <div className="min-h-screen bg-gray-950 pb-32">
+      <div className="min-h-screen bg-black pb-32">
         <WorkoutHeader
           elapsedTime={elapsedTime}
           workoutName={workoutName}
@@ -33,29 +41,61 @@ export default function WorkoutSession() {
         />
 
         <div className="p-4 space-y-6">
-          {/* Map your exercises here. Ideally, move the card UI to ExerciseCard.tsx */}
           {exercises.map((exercise) => (
-            <div key={exercise.id} className="text-white">
-              {/* ... existing card UI code ... */}
-              <h3 className="font-bold">{exercise.exercise_name}</h3>
-              <Button onClick={() => addSet(exercise.id, exercise.sets || [])}>
-                Add Set
-              </Button>
+            <div key={exercise._id} className="bg-zinc-900 rounded-3xl p-6 border border-white/5 space-y-4">
+              <h3 className="text-xl font-black text-white capitalize">{exercise.exercise_base?.name || "Exercise"}</h3>
+              
+              {/* History of Sets */}
+              <div className="space-y-2">
+                {exercise.sets?.map((set, i) => (
+                  <div key={i} className="flex items-center justify-between bg-white/5 p-3 rounded-xl text-sm">
+                    <span className="text-zinc-500 font-bold">SET {i + 1}</span>
+                    <span className="text-white font-black">{set.weight}kg × {set.reps}</span>
+                    <Check className="w-4 h-4 text-green-500" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Input for New Set */}
+              <div className="flex gap-3 items-center pt-2">
+                <Input
+                  type="number"
+                  placeholder="kg"
+                  value={inputs[exercise._id]?.weight || ""}
+                  onChange={(e) => handleInputChange(exercise._id, 'weight', e.target.value)}
+                  className="bg-zinc-800 border-none text-white font-bold h-12 text-center"
+                />
+                <span className="text-zinc-600 font-bold">×</span>
+                <Input
+                  type="number"
+                  placeholder="Reps"
+                  value={inputs[exercise._id]?.reps || ""}
+                  onChange={(e) => handleInputChange(exercise._id, 'reps', e.target.value)}
+                  className="bg-zinc-800 border-none text-white font-bold h-12 text-center"
+                />
+                <Button 
+                  onClick={() => {
+                    const weight = parseFloat(inputs[exercise._id]?.weight || "0");
+                    const reps = parseInt(inputs[exercise._id]?.reps || "0");
+                    addSet(exercise._id, reps, weight);
+                    handleInputChange(exercise._id, 'weight', "");
+                    handleInputChange(exercise._id, 'reps', "");
+                  }}
+                  className="h-12 w-12 rounded-xl bg-white text-black hover:bg-zinc-200"
+                >
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           ))}
-
-          {/* Placeholder for Add Trigger */}
-          <Button className="w-full h-14 bg-white/5">
-            <Plus className="w-6 h-6 mr-2" /> Add Exercise
-          </Button>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-950 pb-8">
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent">
           <Button
             onClick={finishWorkout}
-            className="w-full h-14 bg-indigo-600 text-white font-bold rounded-2xl"
+            className="w-full h-16 bg-blue-600 text-white font-black text-lg rounded-2xl shadow-2xl shadow-blue-500/20"
           >
-            <Trophy className="w-5 h-5 mr-2" /> Finish Workout
+            <Trophy className="w-6 h-6 mr-3" /> FINISH WORKOUT
           </Button>
         </div>
       </div>

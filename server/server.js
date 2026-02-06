@@ -32,6 +32,7 @@ app.use('/api/workouts', require('./routes/workouts'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/vision', require('./routes/vision'));
 app.use('/api/exercises', require('./routes/exercises'));
+app.use('/api/workouts', require('./routes/workouts'));
 
 app.get('/', (req, res) => res.send('API is running...'));
 
