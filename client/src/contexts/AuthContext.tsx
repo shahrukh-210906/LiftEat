@@ -37,17 +37,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    const clearSession = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setProfile(null);
+    };
+    const interceptor = api.interceptors.response.use(response => response, error => {
+      if (error.response?.status === 401 && !error.config?.url?.startsWith('/auth/')) clearSession();
+      return Promise.reject(error);
+    });
     const initAuth = async () => {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
       
-      if (token && storedUser) {
-        setUser(JSON.parse(storedUser));
-        await refreshProfile();
+      try {
+        if (token && storedUser) {
+          const parsed = JSON.parse(storedUser);
+          if (!parsed?.id || !parsed?.email) throw new Error('Invalid saved session');
+          const { data } = await api.get('/profile');
+          setProfile(data);
+          setUser(parsed);
+        }
+      } catch {
+        clearSession();
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     initAuth();
+    return () => api.interceptors.response.eject(interceptor);
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {

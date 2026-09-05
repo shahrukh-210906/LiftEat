@@ -36,7 +36,7 @@ export default function ExerciseDetails() {
   }, [id]);
 
   if (loading) return <div className="min-h-screen grid place-items-center"><div className="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin" /></div>;
-  if (!exercise) return null;
+  if (!exercise) return <AppLayout><p>Exercise unavailable.</p><Button onClick={() => navigate('/workout')}>Back to exercises</Button></AppLayout>;
 
   return (
     <AppLayout>
@@ -47,7 +47,10 @@ export default function ExerciseDetails() {
           <Button variant="ghost" onClick={() => navigate(-1)} className="rounded-full hover:bg-white/80 -ml-3 text-gray-500 hover:text-black transition-all">
             <ArrowLeft className="w-5 h-5 mr-2" /> Back
           </Button>
-          <Button variant="outline" size="icon" className="rounded-full border-gray-200 hover:bg-white hover:border-black transition-colors">
+          <Button aria-label="Copy exercise link" onClick={async () => {
+            try { await navigator.clipboard.writeText(window.location.href); toast.success('Exercise link copied'); }
+            catch { toast.error('Could not copy the link'); }
+          }} variant="outline" size="icon" className="rounded-full border-gray-200 hover:bg-white hover:border-black transition-colors">
             <Share2 className="w-4 h-4" />
           </Button>
         </div>
@@ -97,7 +100,7 @@ export default function ExerciseDetails() {
         {/* Footer */}
         <div className="fixed bottom-0 left-0 right-0 p-6 z-40 md:pl-72 pointer-events-none">
            <div className="max-w-4xl mx-auto pointer-events-auto">
-             <Button className="w-full h-16 rounded-2xl bg-black text-white hover:bg-neutral-800 shadow-2xl shadow-black/20 text-lg font-bold flex items-center justify-center gap-3 transition-transform active:scale-[0.98]">
+             <Button onClick={() => navigate('/routines/new', { state: { exercise } })} className="w-full h-16 rounded-2xl bg-black text-white hover:bg-neutral-800 shadow-2xl shadow-black/20 text-lg font-bold flex items-center justify-center gap-3 transition-transform active:scale-[0.98]">
                <Plus className="w-6 h-6" /> Add to Routine
              </Button>
            </div>

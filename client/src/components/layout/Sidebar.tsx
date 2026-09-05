@@ -27,7 +27,7 @@ export function Sidebar() {
         <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shadow-lg shadow-black/20">
           <Dumbbell className="w-5 h-5 text-white" />
         </div>
-        <span className="font-bold text-xl tracking-tight text-black">GymFlow</span>
+        <span className="font-bold text-xl tracking-tight text-black">LiftEat</span>
       </div>
 
       {/* Navigation */}

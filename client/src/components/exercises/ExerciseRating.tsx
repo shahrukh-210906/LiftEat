@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Frown, Meh, Smile, Zap, AlertTriangle, MessageSquare } from "lucide-react";
+import { Frown, Meh, Zap, AlertTriangle, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea"; // Ensure you have this component

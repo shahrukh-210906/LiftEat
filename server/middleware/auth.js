@@ -16,6 +16,7 @@ const auth = (req, res, next) => {
     const tokenString = token.startsWith('Bearer ') ? token.slice(7, token.length) : token;
 
     const decoded = jwt.verify(tokenString, process.env.JWT_SECRET);
+    if (!decoded.id || !decoded.exp) return res.status(401).json({ error: 'Please sign in again' });
 
     // 4. Add user from payload to request object
     req.user = decoded;

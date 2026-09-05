@@ -1,6 +1,5 @@
 import { Dumbbell, Utensils, Bot, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cn } from "@/lib/utils";
 
 const actions = [
   { 

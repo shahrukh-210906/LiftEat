@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Trophy, Plus, Trash2, Dumbbell, Timer } from "lucide-react";
+import { Trophy, Plus, Trash2, Dumbbell } from "lucide-react";
 import { useWorkoutSession } from "@/hooks/useWorkoutSession";
 import { WorkoutHeader } from "@/components/workout/WorkoutHeader";
 import { Badge } from "@/components/ui/badge";
+import { AddExerciseDialog } from "@/components/workout/AddExerciseDialog";
 
 export default function WorkoutSession() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +17,7 @@ export default function WorkoutSession() {
     setWorkoutName,
     elapsedTime,
     addSet,
+    addExercise,
     deleteSet,
     finishWorkout,
     loading
@@ -24,6 +25,8 @@ export default function WorkoutSession() {
 
   // Local state to manage inputs for each exercise independently
   const [inputs, setInputs] = useState<Record<string, { reps: string; weight: string }>>({});
+  const [addingExercise, setAddingExercise] = useState(false);
+  const [savingSet, setSavingSet] = useState(false);
 
   const handleInputChange = (exId: string, field: 'reps' | 'weight', value: string) => {
     setInputs(prev => ({
@@ -55,7 +58,8 @@ export default function WorkoutSession() {
         </div>
 
         <div className="p-4 space-y-6 max-w-3xl mx-auto mt-4">
-          {exercises.map((exercise, index) => {
+          {workout.is_active && <Button onClick={() => setAddingExercise(true)}><Plus className="mr-2 h-4 w-4" /> Add exercise</Button>}
+          {exercises.map((exercise) => {
              // Handle both new structure (exercise_base object) and legacy fallback
             const exerciseName = exercise.exercise_base?.name || exercise.exercise_name || "Unknown Exercise";
             const bodyPart = exercise.exercise_base?.bodyPart || exercise.muscle_group || "General";
@@ -79,6 +83,7 @@ export default function WorkoutSession() {
                   <h3 className="font-black text-lg text-gray-900 leading-tight capitalize">
                     {exerciseName}
                   </h3>
+                  {exercise.target_sets && <p className="text-sm text-gray-500">Target: {exercise.target_sets} sets</p>}
                 </div>
               </div>
               
@@ -95,7 +100,7 @@ export default function WorkoutSession() {
                     </div>
                    )}
 
-                  {exercise.sets?.map((set: any, i: number) => (
+                  {exercise.sets?.map((set, i: number) => (
                     <div key={set._id || i} className="grid grid-cols-12 gap-2 items-center bg-gray-50 rounded-xl p-2 h-12">
                       <div className="col-span-2 flex justify-center">
                          <div className="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
@@ -110,6 +115,8 @@ export default function WorkoutSession() {
                       </div>
                       <div className="col-span-2 flex justify-end pr-1">
                         <button 
+                          disabled={!workout.is_active || savingSet}
+                          aria-label="Delete set"
                           onClick={() => deleteSet(exercise._id, set._id)}
                           className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors"
                         >
@@ -121,7 +128,7 @@ export default function WorkoutSession() {
                 </div>
 
                 {/* Add Set Form */}
-                <div className="flex gap-2 items-center pt-2 mt-2 border-t border-dashed border-gray-100">
+                {workout.is_active && <div className="flex gap-2 items-center pt-2 mt-2 border-t border-dashed border-gray-100">
                   <div className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-1 focus-within:ring-2 focus-within:ring-black/5 focus-within:border-black transition-all">
                       <label className="text-[9px] uppercase font-bold text-gray-400 block">Weight</label>
                       <input
@@ -145,20 +152,22 @@ export default function WorkoutSession() {
                   </div>
 
                   <Button 
-                    onClick={() => {
+                    disabled={savingSet}
+                    onClick={async () => {
                       const weight = parseFloat(inputs[exercise._id]?.weight || "0");
                       const reps = parseInt(inputs[exercise._id]?.reps || "0");
-                      if (reps > 0) {
-                          addSet(exercise._id, reps, weight);
-                          // Keep weight for convenience, clear reps
-                          handleInputChange(exercise._id, 'reps', "");
+                      if (reps > 0 && Number.isFinite(weight) && weight >= 0) {
+                          setSavingSet(true);
+                          try {
+                            if (await addSet(exercise._id, reps, weight)) handleInputChange(exercise._id, 'reps', "");
+                          } finally { setSavingSet(false); }
                       }
                     }}
                     className="h-14 w-14 rounded-xl bg-black hover:bg-gray-800 text-white shadow-lg shadow-black/20"
                   >
                     <Plus className="w-6 h-6" />
                   </Button>
-                </div>
+                </div>}
               </div>
             </div>
           )})}
@@ -171,7 +180,7 @@ export default function WorkoutSession() {
         </div>
 
         {/* Floating Action Button for Finish */}
-        <div className="fixed bottom-6 left-4 right-4 max-w-3xl mx-auto">
+        {workout.is_active && <div className="fixed bottom-6 left-4 right-4 max-w-3xl mx-auto">
           <Button
             onClick={finishWorkout}
             className="w-full h-16 bg-black text-white hover:bg-gray-900 font-black text-lg rounded-2xl shadow-2xl shadow-black/20 flex items-center justify-center gap-3 transition-all active:scale-95"
@@ -179,7 +188,8 @@ export default function WorkoutSession() {
             <Trophy className="w-5 h-5 text-yellow-400" /> 
             FINISH WORKOUT
           </Button>
-        </div>
+        </div>}
+        <AddExerciseDialog open={addingExercise} onOpenChange={setAddingExercise} onAdd={addExercise} />
       </div>
     </AppLayout>
   );

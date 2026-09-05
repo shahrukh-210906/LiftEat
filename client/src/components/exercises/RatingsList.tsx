@@ -7,7 +7,7 @@ interface Rating {
   _id: string;
   user: {
     _id: string;
-    full_name: string;
+    fullName: string;
   };
   value: 'INJURED' | 'NO_FEEL' | 'MODERATE' | 'EFFECTIVE';
   comment?: string; // Add optional comment
@@ -46,7 +46,7 @@ export function RatingsList({ ratings }: Props) {
             {sortedRatings.map((rating) => {
               const config = ICONS[rating.value] || ICONS.NO_FEEL;
               const Icon = config.icon;
-              const initial = rating.user?.full_name?.[0] || "?";
+              const initial = rating.user?.fullName?.[0] || "?";
 
               return (
                 <div key={rating._id} className="p-3 rounded-xl bg-white/40 border border-white/50 space-y-2">
@@ -56,7 +56,7 @@ export function RatingsList({ ratings }: Props) {
                         <AvatarFallback className="bg-black text-white text-[10px]">{initial}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-xs font-bold text-gray-900">{rating.user?.full_name || "User"}</p>
+                        <p className="text-xs font-bold text-gray-900">{rating.user?.fullName || "User"}</p>
                         <p className="text-[10px] text-gray-400">{formatDistanceToNow(new Date(rating.date))} ago</p>
                       </div>
                     </div>

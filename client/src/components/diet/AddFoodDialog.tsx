@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FoodItem } from "@/lib/types";
@@ -17,7 +17,7 @@ export function AddFoodDialog({ open, onOpenChange, foods, onAdd }: Props) {
   const [qty, setQty] = useState("100");
 
   const handleAdd = async () => {
-    if (!selected) return;
+    if (!selected || !Number.isFinite(Number(qty)) || Number(qty) <= 0) return;
     const success = await onAdd(selected, parseFloat(qty), "");
     if (success) {
       setSelected(null);
@@ -29,12 +29,12 @@ export function AddFoodDialog({ open, onOpenChange, foods, onAdd }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-card max-h-[80vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Log Food</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Log Food</DialogTitle><DialogDescription>Choose a food and enter the amount in grams.</DialogDescription></DialogHeader>
         {!selected ? (
           <div className="space-y-2">
             <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
             {foods.filter(f => f.name.toLowerCase().includes(search.toLowerCase())).map(food => (
-              <div key={food.id} onClick={() => setSelected(food)} className="p-2 cursor-pointer hover:bg-white/5 rounded">
+              <div key={food._id} onClick={() => setSelected(food)} className="p-2 cursor-pointer hover:bg-white/5 rounded">
                 {food.name}
               </div>
             ))}
@@ -45,7 +45,7 @@ export function AddFoodDialog({ open, onOpenChange, foods, onAdd }: Props) {
             <Input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="Grams" />
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setSelected(null)}>Back</Button>
-              <Button onClick={handleAdd}>Add Log</Button>
+              <Button disabled={!Number.isFinite(Number(qty)) || Number(qty) <= 0} onClick={handleAdd}>Add Log</Button>
             </div>
           </div>
         )}

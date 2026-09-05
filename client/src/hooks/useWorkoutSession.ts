@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { toast } from "sonner";
-// We use 'any' for sets here to avoid strict type conflicts with the legacy types file
-// You should eventually update your types.ts to match the new backend model perfectly.
+import { WorkoutSession, WorkoutExercise } from "@/lib/types";
 
 export function useWorkoutSession(workoutId?: string) {
   const navigate = useNavigate();
-  const [workout, setWorkout] = useState<any | null>(null);
-  const [exercises, setExercises] = useState<any[]>([]);
+  const [workout, setWorkout] = useState<WorkoutSession | null>(null);
+  const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [workoutName, setWorkoutName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -24,7 +23,7 @@ export function useWorkoutSession(workoutId?: string) {
       // Calculate elapsed time based on server start time
       if (data.session.started_at) {
         const start = new Date(data.session.started_at).getTime();
-        const now = Date.now();
+        const now = data.session.completed_at ? new Date(data.session.completed_at).getTime() : Date.now();
         setElapsedTime(Math.floor((now - start) / 1000));
       }
     } catch (error: any) {
@@ -53,8 +52,10 @@ export function useWorkoutSession(workoutId?: string) {
       ));
       
       toast.success("Set logged");
+      return true;
     } catch (error) {
       toast.error("Could not add set");
+      return false;
     }
   };
 
@@ -70,6 +71,17 @@ export function useWorkoutSession(workoutId?: string) {
       toast.success("Set removed");
     } catch (error) {
       toast.error("Could not delete set");
+    }
+  };
+
+  const addExercise = async (exerciseId: string) => {
+    try {
+      const { data } = await api.post(`/workouts/${workoutId}/exercises`, { exerciseId });
+      setExercises(prev => [...prev, data]);
+      return true;
+    } catch {
+      toast.error('Could not add exercise');
+      return false;
     }
   };
 
@@ -89,7 +101,7 @@ export function useWorkoutSession(workoutId?: string) {
 
   // Timer logic
   useEffect(() => {
-    let interval: any;
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (workout?.is_active) {
       interval = setInterval(() => {
         setElapsedTime(prev => prev + 1);
@@ -112,6 +124,7 @@ export function useWorkoutSession(workoutId?: string) {
     setWorkoutName,
     elapsedTime,
     addSet,
+    addExercise,
     deleteSet,
     finishWorkout,
     loading

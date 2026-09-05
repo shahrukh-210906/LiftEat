@@ -2,10 +2,9 @@ import axios from "axios";
 
 // Create an axios instance pointing to your backend URL
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: import.meta.env.VITE_API_URL || "/api",
+  timeout: 120000,
+
 });
 
 // Add a request interceptor to attach the Token

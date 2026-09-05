@@ -22,6 +22,7 @@ export function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
+              aria-label={item.label}
               className={cn(
                 "relative flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
                 isActive 

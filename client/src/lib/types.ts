@@ -2,8 +2,8 @@ export type BodyType = 'ectomorph' | 'mesomorph' | 'endomorph';
 export type FitnessGoal = 'lose_weight' | 'build_muscle' | 'maintain' | 'gain_strength' | 'improve_endurance';
 
 export interface Profile {
-  id: string;
-  user_id: string;
+  _id: string;
+  user: string;
   full_name: string | null;
   body_type: BodyType | null;
   fitness_goal: FitnessGoal | null;
@@ -23,22 +23,19 @@ export interface Exercise {
   name: string;
   bodyPart: string; // Changed to match mongo
   equipment?: string | null;
+  images?: string[];
+  instructions?: string[];
 }
 
 export interface WorkoutRoutine {
   _id: string;
   name: string;
-  exercises: {
-    name: string;
-    muscle_group: string;
-    default_sets: number;
-    default_reps: number;
-  }[];
+  exercises: { exercise: Exercise; sets: number }[];
 }
 
 export interface WorkoutSession {
   _id: string; // Changed to match mongo
-  user_id: string;
+  user: string;
   name: string;
   started_at: string;
   completed_at: string | null;
@@ -48,25 +45,25 @@ export interface WorkoutSession {
 
 export interface WorkoutExercise {
   _id: string; // Changed to match mongo
-  workout_session_id: string;
+  workout_session: string;
+  exercise_base?: Exercise;
+  target_sets?: number;
   exercise_name: string;
   muscle_group: string | null;
   sets?: ExerciseSet[];
 }
 
 export interface ExerciseSet {
-  id: string;
-  _id: string; // Added mongo alias
-  workout_exercise_id: string;
+  _id: string;
   set_number: number;
-  weight_kg: number | null;
-  reps: number | null;
-  is_completed: boolean;
+  weight: number;
+  reps: number;
+  completed: boolean;
 }
 
 export interface DietLog {
-  id: string;
-  user_id: string;
+  _id: string;
+  user: string;
   food_name: string;
   quantity_g: number;
   calories: number;
@@ -78,7 +75,7 @@ export interface DietLog {
 }
 
 export interface FoodItem {
-  id: string;
+  _id: string;
   name: string;
   calories_per_100g: number;
   protein_per_100g: number;

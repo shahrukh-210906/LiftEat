@@ -11,17 +11,20 @@ export function useWorkoutLibrary() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetch = async () => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
         if (query) params.append("query", query);
         if (category !== "All") params.append("bodyPart", category.toLowerCase());
-        const { data } = await api.get(`/exercises?${params.toString()}`);
+        const { data } = await api.get(`/exercises?${params.toString()}`, { signal: controller.signal });
         setExercises(data);
-      } finally { setLoading(false); }
+      } catch { if (!controller.signal.aborted) toast.error('Could not load exercises'); }
+      finally { if (!controller.signal.aborted) setLoading(false); }
     };
-    fetch();
+    const timer = setTimeout(fetch, 200);
+    return () => { clearTimeout(timer); controller.abort(); };
   }, [query, category]);
 
   const startSession = async (name: string) => {

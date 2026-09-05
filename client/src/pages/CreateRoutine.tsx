@@ -6,12 +6,15 @@ import { useWorkoutLibrary } from "@/hooks/useWorkoutLibrary";
 import { Search, Plus, Save, X, Dumbbell, Eye, ChevronUp, ChevronDown } from "lucide-react"; // Added Chevrons
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 
 const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Abs", "Cardio"];
@@ -26,11 +29,15 @@ interface SelectedExercise {
 
 export default function CreateRoutine() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [routineName, setRoutineName] = useState("");
   const { exercises, query, setQuery, category, setCategory } = useWorkoutLibrary();
   
   // Update state type
-  const [selectedExercises, setSelectedExercises] = useState<SelectedExercise[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<SelectedExercise[]>(() => {
+    const exercise = location.state?.exercise;
+    return exercise?._id ? [{ _id: exercise._id, name: exercise.name, bodyPart: exercise.bodyPart, sets: 3 }] : [];
+  });
   
   const [previewExercise, setPreviewExercise] = useState<any | null>(null);
 
@@ -222,6 +229,7 @@ export default function CreateRoutine() {
       {/* QUICK PREVIEW DRAWER */}
       <Sheet open={!!previewExercise} onOpenChange={() => setPreviewExercise(null)}>
         <SheetContent side="right" className="w-full sm:max-w-md p-0 overflow-hidden rounded-l-[2rem] border-none bg-white">
+          <SheetHeader className="sr-only"><SheetTitle>Exercise preview</SheetTitle><SheetDescription>View instructions and add this exercise to your routine.</SheetDescription></SheetHeader>
           {previewExercise && (
             <div className="h-full flex flex-col">
               <div className="h-64 relative bg-gray-100">

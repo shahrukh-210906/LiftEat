@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Activity, Flame, Zap, Trophy } from "lucide-react"; // Changed icons slightly for variety
 import { AppLayout } from "../components/layout/AppLayout";
@@ -110,20 +111,20 @@ export default function Dashboard() {
                 Last Session
               </h2>
               {lastWorkout ? (
-                <div className="group flex items-center justify-between p-6 rounded-3xl bg-white/80 border border-gray-100 hover:border-gray-300 transition-all cursor-pointer">
+                <Link to={`/workout/${lastWorkout._id}`} className="group flex items-center justify-between p-6 rounded-3xl bg-white/80 border border-gray-100 hover:border-gray-300 transition-all cursor-pointer">
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">
                       {lastWorkout.name}
                     </h3>
                     <p className="text-gray-500 text-sm mt-1">
-                      {new Date(lastWorkout.date).toLocaleDateString()} •{" "}
+                      {new Date(lastWorkout.completed_at || lastWorkout.started_at).toLocaleDateString()} •{" "}
                       {lastWorkout.duration_minutes} mins
                     </p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-gray-900 group-hover:text-white transition-colors">
                     <Activity className="w-5 h-5" />
                   </div>
-                </div>
+                </Link>
               ) : (
                 <div className="p-6 text-gray-400 text-center border-2 border-dashed border-gray-100 rounded-3xl">
                   No recent workouts found.

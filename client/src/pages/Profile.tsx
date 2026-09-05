@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +13,12 @@ export default function Profile() {
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
     weight: profile?.weight_kg || "",
-    calories: profile?.daily_calorie_goal || 2000,
+    calories: String(profile?.daily_calorie_goal || 2000),
   });
+
+  useEffect(() => {
+    if (profile) setForm({ full_name: profile.full_name || "", weight: profile.weight_kg || "", calories: String(profile.daily_calorie_goal || 2000) });
+  }, [profile]);
 
   const handleSave = async () => {
     const { error } = await updateProfile({
@@ -23,6 +27,7 @@ export default function Profile() {
       daily_calorie_goal: Number(form.calories),
     });
     if (!error) toast.success("Saved!");
+    else toast.error(error.message);
   };
 
   return (

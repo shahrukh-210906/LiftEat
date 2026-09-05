@@ -7,8 +7,11 @@ const auth = require('../middleware/auth');
 const Profile = require('../models/Profile');
 
 // Setup file upload (Memory storage for speed)
-const upload = multer({ storage: multer.memoryStorage() });
-const ollama = new Ollama({ host: 'http://127.0.0.1:11434' });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) return cb(Object.assign(new Error('Upload a JPEG, PNG or WebP image'), { status: 400 }));
+  cb(null, true);
+} });
+const ollama = new Ollama({ host: process.env.OLLAMA_HOST || 'http://127.0.0.1:11434' });
 
 // @route   POST api/vision/analyze-body
 // @desc    Analyze body shape from photo
@@ -38,7 +41,7 @@ router.post('/analyze-body', auth, upload.single('image'), async (req, res) => {
 
     // 3. Send to Llama 3.2 Vision
     const response = await ollama.chat({
-      model: 'llama3.2-vision',
+      model: process.env.OLLAMA_VISION_MODEL || 'llama3.2-vision',
       messages: [{
         role: 'user',
         content: prompt,
@@ -49,6 +52,9 @@ router.post('/analyze-body', auth, upload.single('image'), async (req, res) => {
     });
 
     const analysis = JSON.parse(response.message.content);
+    if (!analysis || ['body_type', 'est_body_fat', 'muscle_mass', 'suggestion'].some(key => typeof analysis[key] !== 'string' || !analysis[key].trim())) {
+      return res.status(502).json({ error: 'The AI returned an incomplete analysis. Please try again.' });
+    }
 
     // 4. Save to Profile
     let profile = await Profile.findOne({ user: req.user.id });
@@ -61,7 +67,7 @@ router.post('/analyze-body', auth, upload.single('image'), async (req, res) => {
 
   } catch (err) {
     console.error("Vision Error:", err.message);
-    res.status(500).send('Server Error');
+    res.status(503).json({ error: 'Body analysis is unavailable. Please try again later.' });
   }
 });
 

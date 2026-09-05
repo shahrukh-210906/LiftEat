@@ -42,11 +42,11 @@ const seedDB = async () => {
       instructions: ex.instructions
     }));
 
-    console.log(`🧹 Clearing old exercises...`);
-    await Exercise.deleteMany({});
-
     console.log(`🌱 Seeding ${formattedExercises.length} exercises...`);
-    await Exercise.insertMany(formattedExercises);
+    // Preserve existing IDs, private notes, ratings and routine references.
+    await Exercise.bulkWrite(formattedExercises.map(exercise => ({
+      updateOne: { filter: { name: exercise.name }, update: { $set: exercise }, upsert: true }
+    })));
 
     console.log('🚀 SUCCESS! Database populated.');
     process.exit();

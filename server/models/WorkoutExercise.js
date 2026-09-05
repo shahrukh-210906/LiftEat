@@ -14,6 +14,7 @@ const workoutExerciseSchema = new mongoose.Schema({
   exercise_name: { type: String, required: true },
   muscle_group: String,
   order_index: Number,
+  target_sets: { type: Number, min: 1 },
   // [NEW] Added sets array
   sets: [{
     set_number: Number,

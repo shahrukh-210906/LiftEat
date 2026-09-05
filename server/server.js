@@ -1,46 +1,12 @@
 require('dotenv').config();
-const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
-const { errorHandler } = require('./middleware/errorMiddleware');
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Connect to Database
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
-  }
-};
-
-connectDB();
-
-// Route Definitions
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/chat', require('./routes/chat'));
-app.use('/api/profile', require('./routes/profile'));
-app.use('/api/diet', require('./routes/diet'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/vision', require('./routes/vision'));
-app.use('/api/exercises', require('./routes/exercises'));
-
-// This is the important one for your workout session issues:
-app.use('/api/workouts', require('./routes/workouts'));
-
-// Base Route
-app.get('/', (req, res) => res.send('LiftEat API is running...'));
-
-// Error Handler (Must be last)
-app.use(errorHandler);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+async function start() {
+  if (!process.env.MONGO_URI || !process.env.JWT_SECRET) throw new Error('Set MONGO_URI and JWT_SECRET in server/.env');
+  await mongoose.connect(process.env.MONGO_URI);
+  const app = require('./app');
+  const server = app.listen(process.env.PORT || 5000, () => console.log('LiftEat API is ready'));
+  const shutdown = () => server.close(async () => { await mongoose.disconnect(); process.exit(0); });
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
+start().catch(error => { console.error(error.message); process.exit(1); });

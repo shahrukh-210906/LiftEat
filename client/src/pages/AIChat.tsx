@@ -75,9 +75,9 @@ export default function AIChat() {
               <div
                 className={`p-3 rounded-xl max-w-[80%] ${msg.role === "user" ? "bg-primary text-primary-foreground" : "glass-card"}`}
               >
-                <ReactMarkdown className="prose prose-invert prose-sm">
+                <div className="prose prose-sm"><ReactMarkdown>
                   {msg.content}
-                </ReactMarkdown>
+                </ReactMarkdown></div>
               </div>
             </div>
           ))}

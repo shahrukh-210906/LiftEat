@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StickyNote, Save, Loader2, Check } from "lucide-react";
+import { StickyNote, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";

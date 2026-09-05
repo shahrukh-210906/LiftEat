@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const Exercise = require('../models/Exercise');
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Smart mapping for broader search terms (e.g., 'legs' finds 'quadriceps')
 const BODY_PART_MAPPING = {
@@ -20,26 +21,27 @@ const BODY_PART_MAPPING = {
 router.get('/', auth, async (req, res) => {
   try {
     const { bodyPart, query } = req.query;
+    if ((query !== undefined && (typeof query !== 'string' || query.length > 100)) || (bodyPart !== undefined && (typeof bodyPart !== 'string' || bodyPart.length > 100))) return res.status(400).json({ error: 'Invalid search' });
     let filter = {};
 
     // Text Search
     if (query) {
-      filter.name = { $regex: query, $options: 'i' };
+      filter.name = { $regex: escapeRegex(query), $options: 'i' };
     }
-    
+
     // Category/Body Part Smart Filter
     if (bodyPart && bodyPart !== 'all') {
       const term = bodyPart.toLowerCase();
       const synonyms = BODY_PART_MAPPING[term] || [term];
-      const regexPattern = synonyms.join('|'); // e.g., "legs|quadriceps|..."
+      const regexPattern = synonyms.map(escapeRegex).join('|');
 
       filter.$or = [
         { bodyPart: { $regex: regexPattern, $options: 'i' } },
-        { category: { $regex: term, $options: 'i' } }
+        { category: { $regex: escapeRegex(term), $options: 'i' } }
       ];
     }
 
-    const exercises = await Exercise.find(filter).limit(100);
+    const exercises = await Exercise.find(filter).select('-notes').limit(100);
     res.json(exercises);
   } catch (err) {
     console.error("Get Exercises Error:", err.message);
@@ -52,6 +54,7 @@ router.get('/', auth, async (req, res) => {
 // ============================================================================
 router.post('/rate', auth, async (req, res) => {
   const { exerciseId, rating, comment } = req.body;
+  if (comment !== undefined && (typeof comment !== 'string' || comment.length > 280)) return res.status(400).json({ error: 'Comments must be 280 characters or fewer' });
   const ALLOWED_RATINGS = ['INJURED', 'NO_FEEL', 'MODERATE', 'EFFECTIVE'];
 
   if (!ALLOWED_RATINGS.includes(rating)) {
@@ -99,9 +102,11 @@ router.post('/rate', auth, async (req, res) => {
     await exercise.save();
 
     // 4. Return populated exercise (so the UI updates the list immediately)
-    await exercise.populate('ratings.user', 'full_name');
-    
-    res.json(exercise);
+    await exercise.populate('ratings.user', 'fullName');
+
+    const result = exercise.toObject();
+    delete result.notes;
+    res.json(result);
   } catch (err) {
     console.error("Rate Error:", err.message);
     res.status(500).send('Server Error');
@@ -129,6 +134,7 @@ router.get('/:id/note', auth, async (req, res) => {
 // Save Note
 router.post('/note', auth, async (req, res) => {
   const { exerciseId, text } = req.body;
+  if (typeof text !== 'string' || text.length > 10000) return res.status(400).json({ error: 'Invalid note' });
   try {
     const exercise = await Exercise.findById(exerciseId);
     if (!exercise) return res.status(404).json({ msg: 'Exercise not found' });
@@ -170,16 +176,18 @@ router.get('/:id', auth, async (req, res) => {
   try {
     // Populate user details in ratings so we can show names in the history list
     const exercise = await Exercise.findById(req.params.id)
-      .populate('ratings.user', 'full_name'); 
+      .populate('ratings.user', 'fullName');
 
     if (!exercise) {
       return res.status(404).json({ msg: 'Exercise not found' });
     }
-    
+
     // Privacy: Do not send the full list of OTHER users' private notes
-    exercise.notes = undefined; 
-    
-    res.json(exercise);
+    exercise.notes = undefined;
+
+    const result = exercise.toObject();
+    delete result.notes;
+    res.json(result);
   } catch (err) {
     console.error("Get ID Error:", err.message);
     if (err.kind === 'ObjectId') {

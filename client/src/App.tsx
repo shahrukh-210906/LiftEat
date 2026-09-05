@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,18 +7,18 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 // Page Imports
-import Auth from "./pages/Auth";
-import Onboarding from "./pages/Onboarding";
-import Dashboard from "./pages/Dashboard";
-import Workout from "./pages/Workout";
-import Routines from "./pages/Routines"; // New Page for viewing routines
-import CreateRoutine from "./pages/CreateRoutine"; // The builder page
-import WorkoutSession from "./pages/WorkoutSession";
-import Diet from "./pages/Diet";
-import AIChat from "./pages/AIChat";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import ExerciseDetails from "./pages/ExerciseDetails";
+const Auth = lazy(() => import("./pages/Auth"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Workout = lazy(() => import("./pages/Workout"));
+const Routines = lazy(() => import("./pages/Routines"));
+const CreateRoutine = lazy(() => import("./pages/CreateRoutine"));
+const WorkoutSession = lazy(() => import("./pages/WorkoutSession"));
+const Diet = lazy(() => import("./pages/Diet"));
+const AIChat = lazy(() => import("./pages/AIChat"));
+const Profile = lazy(() => import("./pages/Profile"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ExerciseDetails = lazy(() => import("./pages/ExerciseDetails"));
 
 const queryClient = new QueryClient();
 
@@ -67,7 +68,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <Suspense fallback={<div className="min-h-screen grid place-items-center">Loading…</div>}><AppRoutes /></Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

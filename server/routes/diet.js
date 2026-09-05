@@ -19,13 +19,18 @@ router.get('/today', auth, async (req, res) => {
 
 // Log food
 router.post('/log', auth, async (req, res) => {
-  const log = await DietLog.create({ ...req.body, user: req.user.id });
+  const { food_name, quantity_g, calories, protein = 0, carbs = 0, fat = 0, meal_type } = req.body;
+  if (typeof food_name !== 'string' || !food_name.trim() || !Number.isFinite(quantity_g) || quantity_g <= 0 || [calories, protein, carbs, fat].some(value => !Number.isFinite(value) || value < 0)) {
+    return res.status(400).json({ error: 'Enter a food name, positive quantity and valid nutrition values' });
+  }
+  const log = await DietLog.create({ food_name: food_name.trim(), quantity_g, calories, protein, carbs, fat, meal_type, user: req.user.id });
   res.json(log);
 });
 
 // Delete log
 router.delete('/log/:id', auth, async (req, res) => {
-  await DietLog.findByIdAndDelete(req.params.id);
+  const deleted = await DietLog.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+  if (!deleted) return res.status(404).json({ error: 'Food log not found' });
   res.json({ success: true });
 });
 

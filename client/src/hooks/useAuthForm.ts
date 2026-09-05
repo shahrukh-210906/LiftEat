@@ -7,7 +7,7 @@ import { z } from "zod";
 const emailSchema = z.string().email("Please enter a valid email");
 const passwordSchema = z
   .string()
-  .min(6, "Password must be at least 6 characters");
+  .min(8, "Password must be at least 8 characters");
 
 export function useAuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -38,7 +38,8 @@ export function useAuthForm() {
     }
 
     try {
-      passwordSchema.parse(formData.password);
+      if (isSignUp) passwordSchema.parse(formData.password);
+      else z.string().min(1, 'Enter your password').parse(formData.password);
     } catch (e: any) {
       newErrors.password = e.errors[0].message;
       isValid = false;

@@ -12,6 +12,10 @@ export function VisionScanner({ onScanComplete }: { onScanComplete: (data: any) 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      toast.error('Choose a JPEG, PNG or WebP image smaller than 5 MB');
+      return;
+    }
 
     setAnalyzing(true);
     const formData = new FormData();
@@ -23,10 +27,11 @@ export function VisionScanner({ onScanComplete }: { onScanComplete: (data: any) 
       setResult(data);
       onScanComplete(data);
       toast.success("Analysis Complete!");
-    } catch {
-      toast.error("Analysis failed.");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Analysis failed.");
     } finally {
       setAnalyzing(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 

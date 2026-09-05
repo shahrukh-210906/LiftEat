@@ -17,11 +17,11 @@ export function useDiet() {
     try {
       const [logsRes, foodsRes] = await Promise.all([
         api.get("/diet/today"),
-        api.get("/foods")
+        api.get("/diet/foods")
       ]);
       setTodaysLogs(logsRes.data);
       setFoodItems(foodsRes.data);
-    } catch (e) { console.error(e); }
+    } catch { toast.error("Could not load your nutrition data"); }
   };
 
   const addLog = async (food: FoodItem, qty: number, mealType: string) => {

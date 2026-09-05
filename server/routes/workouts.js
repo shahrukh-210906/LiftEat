@@ -4,241 +4,103 @@ const auth = require('../middleware/auth');
 const WorkoutSession = require('../models/WorkoutSession');
 const WorkoutExercise = require('../models/WorkoutExercise');
 const WorkoutRoutine = require('../models/WorkoutRoutine');
-
-// ==========================================
-// 1. ROUTINE MANAGEMENT
-// ==========================================
-
-// @route   GET api/workouts/routines
-// @desc    Get all saved routines
-router.get('/routines', auth, async (req, res) => {
-  try {
-    const routines = await WorkoutRoutine.find({ user: req.user.id })
-      .populate('exercises.exercise') // Populates details from the Exercise library
-      .sort({ created_at: -1 });
-    res.json(routines);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+const Exercise = require('../models/Exercise');
+router.use(auth);
+router.get('/routines', async (req, res) => {
+  res.json(await WorkoutRoutine.find({ user: req.user.id }).populate('exercises.exercise', '-notes').sort({ created_at: -1 }));
 });
-
-// @route   POST api/workouts/routines
-// @desc    Create a new routine
-router.post('/routines', auth, async (req, res) => {
-  try {
-    const { name, exercises } = req.body;
-
-    // Validate exercises array
-    if (!exercises || !Array.isArray(exercises)) {
-      return res.status(400).json({ msg: "Invalid exercises data" });
-    }
-
-    const newRoutine = new WorkoutRoutine({
-      user: req.user.id,
-      name,
-      // Map incoming data to schema (Stores Exercise ID + Target Sets)
-      exercises: exercises.map(ex => ({
-        exercise: ex._id || ex.exercise,
-        sets: ex.sets || 3
-      }))
-    });
-
-    const routine = await newRoutine.save();
-    res.json(routine);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+router.post('/routines', async (req, res) => {
+  const { name, exercises } = req.body;
+  if (typeof name !== 'string' || !name.trim() || !Array.isArray(exercises) || !exercises.length || exercises.length > 100) return res.status(400).json({ error: 'Name your routine and select 1–100 exercises' });
+  const entries = exercises.map(ex => ({ exercise: ex?._id || ex?.exercise, sets: ex?.sets ?? 3 }));
+  if (entries.some(ex => !ex.exercise || !Number.isInteger(ex.sets) || ex.sets < 1 || ex.sets > 100)) return res.status(400).json({ error: 'Each exercise needs 1–100 target sets' });
+  const ids = [...new Set(entries.map(ex => String(ex.exercise)))];
+  if (await Exercise.countDocuments({ _id: { $in: ids } }) !== ids.length) return res.status(400).json({ error: 'Exercise not found' });
+  res.status(201).json(await WorkoutRoutine.create({ user: req.user.id, name: name.trim(), exercises: entries }));
 });
-
-// @route   DELETE api/workouts/routines/reset
-// @desc    [DEV TOOL] Delete all routines (Fixes 500 errors from schema changes)
-router.delete('/routines/reset', auth, async (req, res) => {
-  try {
-    await WorkoutRoutine.deleteMany({ user: req.user.id });
-    res.json({ msg: 'Routines database reset successfully.' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+router.delete('/routines/:id', async (req, res) => {
+  const routine = await WorkoutRoutine.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+  if (!routine) return res.status(404).json({ error: 'Routine not found' });
+  res.json({ success: true });
 });
-
-// @route   DELETE api/workouts/routines/:id
-// @desc    Delete a specific routine
-router.delete('/routines/:id', auth, async (req, res) => {
-  try {
-    const routine = await WorkoutRoutine.findById(req.params.id);
-
-    if (!routine) {
-      return res.status(404).json({ msg: 'Routine not found' });
-    }
-
-    // Verify user owns the routine
-    if (routine.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
-
-    await routine.deleteOne();
-    res.json({ msg: 'Routine removed' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+router.post('/start', async (req, res) => {
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+  res.status(201).json(await WorkoutSession.create({ user: req.user.id, name: name || 'Quick Workout' }));
 });
-
-// ==========================================
-// 2. SESSION MANAGEMENT (START / LOAD / FINISH)
-// ==========================================
-
-// @route   POST api/workouts/start
-// @desc    Start a Quick Workout (Empty Session)
-router.post('/start', auth, async (req, res) => {
+router.post('/start/:routineId', async (req, res) => {
+  const routine = await WorkoutRoutine.findOne({ _id: req.params.routineId, user: req.user.id }).populate('exercises.exercise', '-notes');
+  if (!routine) return res.status(404).json({ error: 'Routine not found' });
+  if (routine.exercises.some(item => !item.exercise)) return res.status(409).json({ error: 'This routine contains a removed exercise. Please recreate it.' });
+  const session = await WorkoutSession.create({ user: req.user.id, name: routine.name });
   try {
-    const newSession = new WorkoutSession({
-      user: req.user.id,
-      name: req.body.name || "Quick Workout",
-      is_active: true,
-      started_at: new Date()
-    });
-    const session = await newSession.save();
-    res.json(session);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    await WorkoutExercise.insertMany(routine.exercises.map((item, index) => ({
+      workout_session: session._id, exercise_base: item.exercise._id,
+      exercise_name: item.exercise.name, muscle_group: item.exercise.bodyPart,
+      order_index: index, target_sets: item.sets, sets: [],
+    })));
+  } catch (error) {
+    await WorkoutExercise.deleteMany({ workout_session: session._id });
+    await session.deleteOne();
+    throw error;
   }
+  res.status(201).json(session);
 });
-
-// @route   POST api/workouts/start/:routineId
-// @desc    Start a session from a Saved Routine
-router.post('/start/:routineId', auth, async (req, res) => {
-  try {
-    // 1. Fetch the Routine
-    const routine = await WorkoutRoutine.findById(req.params.routineId).populate('exercises.exercise');
-    if (!routine) return res.status(404).json({ msg: "Routine not found" });
-
-    // 2. Create the Session
-    const newSession = new WorkoutSession({
-      user: req.user.id,
-      name: routine.name,
-      is_active: true,
-      started_at: new Date()
-    });
-    const savedSession = await newSession.save();
-
-    // 3. Copy Exercises from Routine -> WorkoutSession
-    // Note: We don't copy "sets" yet because the user hasn't performed them.
-    const sessionExercises = routine.exercises.map((item, index) => ({
-      workout_session: savedSession._id,
-      exercise_base: item.exercise._id, // Link to original exercise for info
-      exercise_name: item.exercise.name,
-      muscle_group: item.exercise.bodyPart,
-      order_index: index,
-      sets: [] // Initialize empty sets for logging
-    }));
-
-    if (sessionExercises.length > 0) {
-      await WorkoutExercise.insertMany(sessionExercises);
-    }
-
-    res.json(savedSession);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+router.get('/:id', async (req, res) => {
+  const session = await WorkoutSession.findOne({ _id: req.params.id, user: req.user.id });
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const exercises = await WorkoutExercise.find({ workout_session: session._id }).populate('exercise_base', '-notes').sort({ order_index: 1 });
+  res.json({ session, exercises });
 });
-
-// @route   GET api/workouts/:id
-// @desc    Load a specific workout session (and its exercises)
-router.get('/:id', auth, async (req, res) => {
-  try {
-    const session = await WorkoutSession.findOne({ _id: req.params.id, user: req.user.id });
-    if (!session) return res.status(404).json({ msg: 'Session not found' });
-
-    const exercises = await WorkoutExercise.find({ workout_session: session._id })
-      .populate('exercise_base') // Get names, images, etc.
-      .sort({ order_index: 1 });
-
-    res.json({ session, exercises });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+router.post('/:id/exercises', async (req, res) => {
+  const session = await WorkoutSession.findOne({ _id: req.params.id, user: req.user.id });
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (!session.is_active) return res.status(409).json({ error: 'This workout is already finished' });
+  if (!req.body.exerciseId) return res.status(400).json({ error: 'Select an exercise' });
+  const base = await Exercise.findById(req.body.exerciseId).select('-notes');
+  if (!base) return res.status(404).json({ error: 'Exercise not found' });
+  const exercise = await WorkoutExercise.create({
+    workout_session: session._id, exercise_base: base._id, exercise_name: base.name,
+    muscle_group: base.bodyPart, order_index: await WorkoutExercise.countDocuments({ workout_session: session._id }), sets: [],
+  });
+  await exercise.populate('exercise_base', '-notes');
+  res.status(201).json(exercise);
 });
-
-// @route   PUT api/workouts/:id/finish
-// @desc    Finish a workout session
-router.put('/:id/finish', auth, async (req, res) => {
-  try {
-    const { name, duration_minutes } = req.body;
-    const session = await WorkoutSession.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.id },
-      { 
-        is_active: false, 
-        completed_at: new Date(),
-        name,
-        duration_minutes
-      },
-      { new: true }
-    );
-    res.json(session);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+router.put('/:id/finish', async (req, res) => {
+  const session = await WorkoutSession.findOne({ _id: req.params.id, user: req.user.id });
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (!session.is_active) return res.json(session);
+  session.is_active = false;
+  session.completed_at = new Date();
+  session.duration_minutes = Math.max(0, Math.floor((session.completed_at - session.started_at) / 60000));
+  if (typeof req.body.name === 'string' && req.body.name.trim()) session.name = req.body.name.trim();
+  await session.save();
+  res.json(session);
 });
-
-// ==========================================
-// 3. SET LOGGING
-// ==========================================
-
-// @route   POST api/workouts/exercises/:exerciseId/sets
-// @desc    Add a set to an exercise
-router.post('/exercises/:exerciseId/sets', auth, async (req, res) => {
-  try {
-    const { reps, weight } = req.body;
-    const exercise = await WorkoutExercise.findById(req.params.exerciseId);
-    
-    if (!exercise) return res.status(404).json({ msg: 'Exercise not found' });
-
-    exercise.sets.push({
-      set_number: exercise.sets.length + 1,
-      reps,
-      weight,
-      completed: true
-    });
-
-    await exercise.save();
-    res.json(exercise);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+async function ownedActiveExercise(req, res, next) {
+  const exercise = await WorkoutExercise.findById(req.params.exerciseId);
+  if (!exercise) return res.status(404).json({ error: 'Exercise not found' });
+  const session = await WorkoutSession.findOne({ _id: exercise.workout_session, user: req.user.id });
+  if (!session) return res.status(404).json({ error: 'Exercise not found' });
+  if (!session.is_active) return res.status(409).json({ error: 'This workout is already finished' });
+  req.workoutExercise = exercise;
+  next();
+}
+router.post('/exercises/:exerciseId/sets', ownedActiveExercise, async (req, res) => {
+  const { reps, weight } = req.body;
+  if (!Number.isInteger(reps) || reps <= 0 || !Number.isFinite(weight) || weight < 0) return res.status(400).json({ error: 'Enter positive whole reps and a non-negative weight' });
+  const exercise = req.workoutExercise;
+  exercise.sets.push({ set_number: exercise.sets.length + 1, reps, weight, completed: true });
+  await exercise.save();
+  await exercise.populate('exercise_base', '-notes');
+  res.json(exercise);
 });
-
-// @route   DELETE api/workouts/exercises/:exerciseId/sets/:setId
-// @desc    Delete a specific set
-router.delete('/exercises/:exerciseId/sets/:setId', auth, async (req, res) => {
-  try {
-    const exercise = await WorkoutExercise.findById(req.params.exerciseId);
-    if (!exercise) return res.status(404).json({ msg: 'Exercise not found' });
-
-    // Filter out the set to delete
-    exercise.sets = exercise.sets.filter(
-      (set) => set._id.toString() !== req.params.setId
-    );
-
-    // Optional: Re-number sets so they are sequential (1, 2, 3...)
-    exercise.sets.forEach((set, index) => {
-      set.set_number = index + 1;
-    });
-
-    await exercise.save();
-    res.json(exercise);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
+router.delete('/exercises/:exerciseId/sets/:setId', ownedActiveExercise, async (req, res) => {
+  const exercise = req.workoutExercise;
+  if (!exercise.sets.some(set => String(set._id) === req.params.setId)) return res.status(404).json({ error: 'Set not found' });
+  exercise.sets = exercise.sets.filter(set => String(set._id) !== req.params.setId);
+  exercise.sets.forEach((set, index) => { set.set_number = index + 1; });
+  await exercise.save();
+  await exercise.populate('exercise_base', '-notes');
+  res.json(exercise);
 });
-
 module.exports = router;

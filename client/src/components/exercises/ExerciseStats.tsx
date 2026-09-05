@@ -1,5 +1,4 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { cn } from "@/lib/utils";
 
 interface StatsProps {
   stats?: {
@@ -18,7 +17,7 @@ const CATEGORIES = [
   { key: 'MODERATE', label: 'Moderate', color: '#9CA3AF' },
   { key: 'NO_FEEL', label: 'No Feel', color: '#E5E7EB' },
   { key: 'INJURED', label: 'Injured', color: '#EF4444' },
-];
+] as const;
 
 export function ExerciseStats({ stats }: StatsProps) {
   const total = stats?.total || 0;
@@ -34,7 +33,6 @@ export function ExerciseStats({ stats }: StatsProps) {
   // Transform data for the chart
   const data = CATEGORIES.map(cat => ({
     name: cat.label,
-    // @ts-ignore
     value: stats?.counts?.[cat.key] || 0,
     color: cat.color
   }));

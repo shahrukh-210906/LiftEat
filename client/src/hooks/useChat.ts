@@ -48,6 +48,7 @@ export function useChat() {
         created_at: new Date().toISOString()
       }]);
     } catch {
+      setMessages(prev => prev.slice(0, -1));
       toast.error('AI failed to respond');
     } finally {
       setIsLoading(false);
@@ -55,8 +56,11 @@ export function useChat() {
   };
 
   const clearChat = async () => {
-    await api.delete('/chat/history');
-    setMessages([]);
+    if (isLoading) return;
+    try {
+      await api.delete('/chat/history');
+      setMessages([]);
+    } catch { toast.error('Could not clear chat'); }
   };
 
   return { messages, sendMessage, clearChat, isLoading, endRef };

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Dumbbell, Play, ArrowUpRight, Heart, Plus, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import api from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useWorkoutLibrary } from "@/hooks/useWorkoutLibrary";
 
@@ -14,27 +14,16 @@ const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Abs", 
 
 export default function Workout() {
   const navigate = useNavigate();
-  const { startSession } = useWorkoutLibrary();
-  const [exercises, setExercises] = useState<any[]>([]);
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("All");
-  
+  const { startSession, exercises, query, setQuery, category, setCategory, loading } = useWorkoutLibrary();
+  const { user } = useAuth();
+  const favoritesKey = 'lifteat:favorites:' + user?.id;
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-
   useEffect(() => {
-    const fetch = async () => {
-       const params = new URLSearchParams();
-       if (query) params.append("query", query);
-       if (category !== "All") params.append("bodyPart", category.toLowerCase());
-       try { 
-         const { data } = await api.get(`/exercises?${params.toString()}`); 
-         setExercises(data); 
-       } catch (error) {
-         console.error("Failed to fetch exercises", error);
-       }
-    };
-    fetch();
-  }, [query, category]);
+    try {
+      const saved = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+      setFavorites(new Set(Array.isArray(saved) ? saved.filter(id => typeof id === 'string') : []));
+    } catch { setFavorites(new Set()); }
+  }, [favoritesKey]);
 
   const handleQuickStart = async () => {
     try {
@@ -64,6 +53,7 @@ export default function Workout() {
         newFavs.add(id);
         toast.success("Added to favorites");
       }
+      localStorage.setItem(favoritesKey, JSON.stringify([...newFavs]));
       return newFavs;
     });
   };
@@ -140,6 +130,8 @@ export default function Workout() {
             </div>
          </div>
 
+         {loading && <p>Loading exercises…</p>}
+         {!loading && exercises.length === 0 && <p>No exercises found.</p>}
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
            {exercises.map((ex) => {
              const isFav = favorites.has(ex._id);
