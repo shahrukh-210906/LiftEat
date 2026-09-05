@@ -27,7 +27,7 @@ export default function AIChat() {
             <div>
               <h1 className="text-xl font-bold">AI Coach</h1>
               <p className="text-xs text-muted-foreground">
-                Your fitness assistant
+                Personalized from your meals, lifts and goals
               </p>
             </div>
           </div>
@@ -47,7 +47,7 @@ export default function AIChat() {
             <div className="text-center mt-8 space-y-4">
               <Sparkles className="w-12 h-12 mx-auto text-primary" />
               <p className="text-muted-foreground">
-                Ask me for a workout plan!
+                Your logged workouts, meals, profile and recent chat are shared with Gemini to personalize replies.
               </p>
               <Button
                 variant="outline"

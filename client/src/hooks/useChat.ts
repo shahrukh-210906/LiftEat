@@ -47,9 +47,9 @@ export function useChat() {
         content: data.reply,
         created_at: new Date().toISOString()
       }]);
-    } catch {
+    } catch (error: any) {
       setMessages(prev => prev.slice(0, -1));
-      toast.error('AI failed to respond');
+      toast.error(error.response?.data?.error || 'AI failed to respond');
     } finally {
       setIsLoading(false);
     }

@@ -107,9 +107,9 @@ test('chat history is scoped to the account', async () => {
 });
 test('chat persists both turns and includes previous messages in the model context', async () => {
   const calls = [];
-  const mocked = mock.method(require('ollama').Ollama.prototype, 'chat', async options => {
+  const mocked = mock.method(require('../services/gemini'), 'generate', async options => {
     calls.push(options);
-    return { message: { content: 'Keep your workout consistent.' } };
+    return 'Keep your workout consistent.';
   });
   try {
     assert.equal((await request('/chat', alice.token, 'POST', { message: 'Plan my workout' })).status, 200);
@@ -138,4 +138,31 @@ test('search treats regex characters as literal text', async () => {
   const result = await request('/exercises?query=%5B', alice.token);
   assert.equal(result.status, 200);
   assert.deepEqual(result.data, []);
+});
+
+
+test('Gemini context contains own meals and lifts, excludes another account, and handles failure', async () => {
+  const DietLog = require('../models/DietLog');
+  const Session = require('../models/WorkoutSession');
+  const Lift = require('../models/WorkoutExercise');
+  await DietLog.create([{ user: alice.user.id, food_name: 'Alice lentil bowl', calories: 420, protein: 25 }, { user: bob.user.id, food_name: 'Bob private meal', calories: 800 }]);
+  const own = await Session.create({ user: alice.user.id, name: 'Alice training' });
+  const other = await Session.create({ user: bob.user.id, name: 'Bob private training' });
+  await Lift.create([{ workout_session: own.id, exercise_name: 'Alice squat', sets: [{ weight: 62, reps: 8, completed: true }] }, { workout_session: other.id, exercise_name: 'Bob private lift', sets: [{ weight: 999, reps: 1 }] }]);
+  const calls = [];
+  const mocked = mock.method(require('../services/gemini'), 'generate', async options => { calls.push(options); return 'Personalized reply'; });
+  try {
+    assert.equal((await request('/chat', alice.token, 'POST', { message: 'Review my progress', profile: { full_name: 'Spoofed Bob' } })).status, 200);
+    assert.match(calls[0].system, /Alice lentil bowl/);
+    assert.match(calls[0].system, /"weight_kg":62/);
+    assert.match(calls[0].system, /"reps":8/);
+    assert.doesNotMatch(calls[0].system, /Bob private|Spoofed Bob|999/);
+    assert.equal((await request('/chat', null, 'POST', { message: 'hello' })).status, 401);
+    const count = (await request('/chat/history', alice.token)).data.length;
+    mocked.mock.mockImplementation(async () => { throw new Error('GEMINI_NOT_CONFIGURED'); });
+    const failed = await request('/chat', alice.token, 'POST', { message: 'hello' });
+    assert.equal(failed.status, 503);
+    assert.match(failed.data.error, /API key/);
+    assert.equal((await request('/chat/history', alice.token)).data.length, count);
+  } finally { mocked.mock.restore(); }
 });
