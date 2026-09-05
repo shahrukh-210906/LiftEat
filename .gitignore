@@ -4,3 +4,8 @@ server/.env
 client/.env
 client/dist/
 *.tsbuildinfo
+.env
+.env.*
+!.env.example
+**/serviceAccount*.json
+**/*firebase-adminsdk*.json

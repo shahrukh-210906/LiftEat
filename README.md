@@ -4,9 +4,11 @@ Fitness tracker built with React/TypeScript, Express, MongoDB and optional local
 
 ## Run locally
 
-Requires Node.js 22 or later, npm, and MongoDB. In `server`, run `npm ci`, copy `.env.example` to `.env`, set a long random `JWT_SECRET` and your `MONGO_URI`, then run `npm run dev`.
+Requires Node.js 22 or later, npm, MongoDB, and a Firebase project with Email/Password authentication enabled. In `server`, run `npm ci`, copy `.env.example` to `.env`, and configure `MONGODB_URI`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY` from your service account. Use the entire private key, including PEM headers, quoted with escaped newlines. Run `npm run dev`. `MONGO_URI` remains supported as an alias.
 
-In a second terminal, open `client`, run `npm ci` and `npm run dev`. Open http://localhost:8080. The development server forwards `/api` to the backend on port 5000.
+In `client`, copy `.env.example` to `.env` and set the Firebase web app values from the same project. Authorize localhost in Firebase Authentication settings. Run `npm ci` and `npm run dev`. Open http://localhost:8080. The development server forwards `/api` to the backend on port 5000. Restart Vite after changing environment values.
+
+Firebase ID tokens are refreshed by the client and verified by Firebase Admin on the server. Each Firebase UID maps to a MongoDB account so profiles, workouts, food logs and chat keep using isolated account IDs. An existing legacy account can be linked by matching email only after Firebase verifies that email; conflicting linked accounts are rejected. Legacy password endpoints are disabled when Firebase is configured. Environment files and service-account keys must stay local.
 
 For exercise data, run `npm run seed` in `server`. The seed updates exercises by name and adds missing records while preserving existing IDs, notes, ratings and routine references.
 

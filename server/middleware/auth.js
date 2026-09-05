@@ -1,31 +1,42 @@
+const firebase = require('../firebase');
 const jwt = require('jsonwebtoken');
-
-const auth = (req, res, next) => {
-  // 1. Get the token from the header
-  const token = req.header('Authorization');
-
-  // 2. Check if no token
-  if (!token) {
-    return res.status(401).json({ msg: 'No token, authorization denied' });
+const User = require('../models/User');
+const protect = async (req, res, next) => {
+  const token = req.headers.authorization?.match(/^Bearer (\S+)$/)?.[1];
+  if (!token) return res.status(401).json({ error: 'Please sign in' });
+  if (!process.env.FIREBASE_PROJECT_ID) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (!decoded.id || !decoded.exp) throw new Error('Invalid token');
+      req.user = decoded;
+      return next();
+    } catch { return res.status(401).json({ error: 'Please sign in again' }); }
   }
-
+  let decoded;
+  try { decoded = await firebase.auth().verifyIdToken(token, true); }
+  catch { return res.status(401).json({ error: 'Please sign in again' }); }
+  if (!decoded.uid || !decoded.email) return res.status(401).json({ error: 'An email account is required' });
   try {
-    // 3. Verify token (Format is usually "Bearer <token>")
-    // We split to remove "Bearer " if your frontend sends it that way. 
-    // If your frontend sends just the token, you can skip the split.
-    const tokenString = token.startsWith('Bearer ') ? token.slice(7, token.length) : token;
-
-    const decoded = jwt.verify(tokenString, process.env.JWT_SECRET);
-    if (!decoded.id || !decoded.exp) return res.status(401).json({ error: 'Please sign in again' });
-
-    // 4. Add user from payload to request object
-    req.user = decoded;
-    
-    // 5. Move to the next middleware/route handler
+    let user = await User.findOne({ firebaseUid: decoded.uid });
+    if (!user) {
+      const email = decoded.email.toLowerCase();
+      const existing = await User.findOne({ email });
+      if (existing) {
+        // Only a verified Firebase email can claim an existing legacy account.
+        if (existing.firebaseUid || !decoded.email_verified) return res.status(409).json({ error: 'Verify your Firebase email before linking an existing account' });
+        user = await User.findOneAndUpdate({ _id: existing._id, firebaseUid: { $exists: false } }, { $set: { firebaseUid: decoded.uid } }, { new: true });
+        if (!user) return res.status(409).json({ error: 'Please retry signing in' });
+      } else {
+        try { user = await User.create({ firebaseUid: decoded.uid, email, fullName: decoded.name || email.split('@')[0] }); }
+        catch (error) {
+          if (error.code !== 11000) throw error;
+          user = await User.findOne({ firebaseUid: decoded.uid });
+          if (!user) return res.status(409).json({ error: 'Account already exists' });
+        }
+      }
+    }
+    req.user = { id: user.id };
     next();
-  } catch (err) {
-    res.status(401).json({ msg: 'Token is not valid' });
-  }
+  } catch (error) { next(error); }
 };
-
-module.exports = auth;
+module.exports = protect;

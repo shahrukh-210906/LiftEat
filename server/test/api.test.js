@@ -166,3 +166,30 @@ test('Gemini context contains own meals and lifts, excludes another account, and
     assert.equal((await request('/chat/history', alice.token)).data.length, count);
   } finally { mocked.mock.restore(); }
 });
+
+test('Firebase users map to isolated MongoDB accounts and legacy tokens cannot bypass Firebase', async () => {
+  const previous = process.env.FIREBASE_PROJECT_ID;
+  process.env.FIREBASE_PROJECT_ID = 'test-project';
+  const firebase = require('../firebase');
+  const stub = mock.method(firebase, 'auth', () => ({ verifyIdToken: async token => {
+    if (token === 'firebase-alice') return { uid: 'firebase-alice', email: 'firebase-alice@example.com', name: 'Firebase Alice' };
+    if (token === 'firebase-bob') return { uid: 'firebase-bob', email: 'firebase-bob@example.com', name: 'Firebase Bob' };
+    if (token === 'unverified-legacy') return { uid: 'legacy-link', email: alice.user.email, email_verified: false };
+    throw new Error('Invalid token');
+  } }));
+  try {
+    const first = await request('/profile', 'firebase-alice');
+    assert.equal(first.status, 200);
+    assert.match(first.data.user, /^[a-f0-9]{24}$/);
+    assert.equal((await request('/profile', 'firebase-alice')).data.user, first.data.user);
+    assert.equal((await request('/profile', alice.token)).status, 401);
+    assert.equal((await request('/profile', 'unverified-legacy')).status, 409);
+    const workout = await request('/workouts/start', 'firebase-alice', 'POST', { name: 'Firebase workout' });
+    assert.equal(workout.status, 201);
+    assert.equal((await request('/workouts/' + workout.data._id, 'firebase-bob')).status, 404);
+    const meal = await request('/diet/log', 'firebase-alice', 'POST', { food_name: 'Oats', calories: 200, quantity_g: 100 });
+    assert.equal(meal.status, 200);
+    assert.equal((await request('/diet/log/' + meal.data._id, 'firebase-bob', 'DELETE')).status, 404);
+    assert.equal((await request('/auth/signin', null, 'POST', {})).status, 410);
+  } finally { stub.mock.restore(); if (previous === undefined) delete process.env.FIREBASE_PROJECT_ID; else process.env.FIREBASE_PROJECT_ID = previous; }
+});
