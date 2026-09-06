@@ -64,6 +64,7 @@ export interface ExerciseSet {
 }
 
 export interface DietLog {
+  source?: 'manual' | 'ai_estimate';
   _id: string;
   user: string;
   food_name: string;

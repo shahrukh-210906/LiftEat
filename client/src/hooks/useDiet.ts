@@ -60,5 +60,5 @@ export function useDiet() {
     fat: acc.fat + (log.fat || 0),
   }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
-  return { todaysLogs, foodItems, totals, profile, addLog, deleteLog };
+  return { todaysLogs, foodItems, totals, profile, addLog, deleteLog, refreshData };
 }

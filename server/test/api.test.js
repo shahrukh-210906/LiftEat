@@ -240,3 +240,28 @@ test('progression endpoint uses only owned completed exercise history', async()=
  assert.equal((await request(path+'?increment=-1',alice.token)).status,400);
  await S.updateOne({_id:s.id},{$set:{is_active:false}});assert.equal((await request(path,alice.token)).status,409);
 });
+
+test('meal estimates require confirmation, allow corrections, and save idempotently per account', async()=>{
+ const Log=require('../models/DietLog');await Log.init();
+ const item={name:'Cooked rice',quantity_g:150,calories:195,protein:4,carbs:42,fat:0.5};
+ const stub=mock.method(require('../services/gemini'),'generate',async()=>JSON.stringify({items:[item],assumptions:['Rice is weighed cooked.']}));
+ try{
+  const before=await Log.countDocuments({user:alice.user.id});
+  assert.equal((await request('/diet/estimate',alice.token,'POST',{text:'',user:bob.user.id})).status,400);
+  const estimate=await request('/diet/estimate',alice.token,'POST',{text:'150 g cooked rice'});assert.equal(estimate.status,201);
+  assert.equal(await Log.countDocuments({user:alice.user.id}),before);
+  const path='/diet/estimate/'+estimate.data.id+'/save';
+  const payload={items:[{...item,calories:200}],meal_type:'lunch'};
+  assert.equal((await request(path,bob.token,'POST',payload)).status,404);
+  assert.equal((await request(path,alice.token,'POST',{...payload,items:[{...item,quantity_g:-1}]})).status,400);
+  const results=await Promise.all([request(path,alice.token,'POST',payload),request(path,alice.token,'POST',payload)]);
+  assert.equal(results[0].status,200);assert.equal(results[1].status,200);assert.equal(results[0].data._id,results[1].data._id);
+  assert.equal(results[0].data.calories,200);assert.equal(results[0].data.source,'ai_estimate');assert.equal(await Log.countDocuments({user:alice.user.id}),before+1);
+  await request('/diet/log/'+results[0].data._id,alice.token,'DELETE');
+  assert.equal((await request(path,alice.token,'POST',payload)).status,410);
+  stub.mock.mockImplementation(async()=>JSON.stringify({items:[{...item,protein:900}],assumptions:[]}));
+  assert.equal((await request('/diet/estimate',alice.token,'POST',{text:'rice'})).status,502);
+  stub.mock.mockImplementation(async()=>JSON.stringify({items:[],assumptions:[]}));
+  assert.equal((await request('/diet/estimate',alice.token,'POST',{text:'hello'})).status,422);
+ }finally{stub.mock.restore();}
+});

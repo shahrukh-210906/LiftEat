@@ -3,6 +3,9 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const DietLog = require('../models/DietLog');
 const FoodItem = require('../models/FoodItem');
+const mealText = require('../controllers/mealTextController');
+router.post('/estimate', auth, mealText.parse);
+router.post('/estimate/:id/save', auth, mealText.save);
 
 // Get today's logs
 router.get('/today', auth, async (req, res) => {

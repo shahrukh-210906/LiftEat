@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, X, Flame } from "lucide-react";
 import { useDiet } from "@/hooks/useDiet";
 import { AddFoodDialog } from "@/components/diet/AddFoodDialog";
+import { MealTextLogger } from '@/components/diet/MealTextLogger';
 
 export default function Diet() {
-  const { profile, todaysLogs: logs, foodItems, totals, addLog, deleteLog } = useDiet();
+  const { profile, todaysLogs: logs, foodItems, totals, addLog, deleteLog, refreshData } = useDiet();
   const [addingFood, setAddingFood] = useState(false);
 
   return (
@@ -41,6 +42,7 @@ export default function Diet() {
            </div>
         </div>
 
+        <MealTextLogger onSaved={refreshData} />
         {/* Clean List */}
         <div className="px-2">
            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Today's Meals</h3>
@@ -50,6 +52,7 @@ export default function Diet() {
                   <div>
                     <p className="font-bold text-gray-900 text-lg">{log.food_name}</p>
                     <p className="text-sm text-gray-400">{log.quantity_g}g • {log.calories} kcal</p>
+                    {log.source === 'ai_estimate' && <p className="text-xs text-violet-600">AI estimate · reviewed by you</p>}
                   </div>
                   <button aria-label={`Delete ${log.food_name}`} onClick={() => deleteLog(log._id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2">
                     <X className="w-5 h-5" />
