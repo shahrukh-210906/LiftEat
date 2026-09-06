@@ -1,0 +1,6 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {recommend}=require('../services/progression');
+const now=Date.now();const current={target_sets:3,target_reps:8};
+const history=[1,2].map(day=>({completed_at:new Date(now-day*86400000),sets:[1,2,3].map(()=>({weight:50,reps:10,completed:true}))}));
+test('progression increases only after two consistent successful sessions',()=>{const r=recommend(current,history,2.5,now);assert.equal(r.weight_kg,52.5);assert.equal(r.decision,'increase');});
+test('progression holds for missed targets or excessive increments',()=>{const h=structuredClone(history);h[0].sets[0].reps=8;assert.equal(recommend(current,h,2.5,now).decision,'hold');assert.equal(recommend(current,history,10,now).weight_kg,50);});
+test('progression avoids advice for missing, mixed, bodyweight or stale data',()=>{assert.equal(recommend(current,[],2.5).weight_kg,null);assert.equal(recommend({},history,2.5).weight_kg,null);const h=structuredClone(history);h[0].sets[0].weight=0;assert.equal(recommend(current,h,2.5).weight_kg,null);h[0].sets[0].weight=40;assert.equal(recommend(current,h,2.5).weight_kg,null);const old=history.map(h=>({...h,completed_at:new Date(now-40*86400000)}));assert.equal(recommend(current,old,2.5,now).weight_kg,null);});

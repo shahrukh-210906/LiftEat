@@ -224,3 +224,19 @@ test('AI workout drafts validate output, require review, isolate users and prese
     assert.equal(await require('../models/WorkoutRoutine').countDocuments(), before);
   } finally { stub.mock.restore(); }
 });
+
+test('progression endpoint uses only owned completed exercise history', async()=>{
+ const progressionExercise=await require('../models/Exercise').create({name:'Progression test squat',bodyPart:'legs'});
+ const S=require('../models/WorkoutSession');const E=require('../models/WorkoutExercise');
+ for(const user of [alice.user.id,bob.user.id]) for(let i=1;i<=2;i++){
+  const s=await S.create({user,name:'Progression history',is_active:false,completed_at:new Date(Date.now()-i*86400000)});
+  await E.create({workout_session:s.id,exercise_base:progressionExercise.id,exercise_name:'Squat',sets:[1,2,3].map(()=>({weight:user===alice.user.id?50:900,reps:10,completed:true}))});
+ }
+ const s=await S.create({user:alice.user.id,name:'Next session'});
+ const e=await E.create({workout_session:s.id,exercise_base:progressionExercise.id,exercise_name:'Squat',target_sets:3,target_reps:8});
+ const path='/workouts/exercises/'+e.id+'/progression';
+ const r=await request(path,alice.token);assert.equal(r.status,200);assert.equal(r.data.weight_kg,52.5);assert.equal(r.data.evidence.length,2);assert.ok(!JSON.stringify(r.data).includes('900'));
+ assert.equal((await request(path,bob.token)).status,404);
+ assert.equal((await request(path+'?increment=-1',alice.token)).status,400);
+ await S.updateOne({_id:s.id},{$set:{is_active:false}});assert.equal((await request(path,alice.token)).status,409);
+});

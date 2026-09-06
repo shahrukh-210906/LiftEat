@@ -7,6 +7,7 @@ import { useWorkoutSession } from "@/hooks/useWorkoutSession";
 import { WorkoutHeader } from "@/components/workout/WorkoutHeader";
 import { Badge } from "@/components/ui/badge";
 import { AddExerciseDialog } from "@/components/workout/AddExerciseDialog";
+import { ProgressionHint } from '@/components/workout/ProgressionHint';
 
 export default function WorkoutSession() {
   const { id } = useParams<{ id: string }>();
@@ -89,6 +90,7 @@ export default function WorkoutSession() {
               </div>
               
               <div className="p-4 space-y-4">
+                {workout.is_active && <ProgressionHint exerciseId={exercise._id} onApply={(weight, reps) => setInputs(prev => ({ ...prev, [exercise._id]: { weight, reps } }))} />}
                 {/* Sets List */}
                 <div className="space-y-2">
                   {/* Table Header */}

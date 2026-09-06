@@ -97,6 +97,22 @@ router.post('/exercises/:exerciseId/sets', ownedActiveExercise, async (req, res)
   await exercise.populate('exercise_base', '-notes');
   res.json(exercise);
 });
+router.get('/exercises/:exerciseId/progression', ownedActiveExercise, async (req, res) => {
+  const increment = req.query.increment === undefined ? 2.5 : Number(req.query.increment);
+  if (!Number.isFinite(increment) || increment < 0.25 || increment > 10 || Array.isArray(req.query.increment)) return res.status(400).json({ error: 'Choose an increment from 0.25 to 10 kg' });
+  const current = req.workoutExercise;
+  const history = current.exercise_base ? await WorkoutSession.aggregate([
+    { $match: { user: new (require('mongoose').Types.ObjectId)(req.user.id), is_active: false, completed_at: { $type: 'date', $lte: new Date() }, _id: { $ne: current.workout_session } } },
+    { $sort: { completed_at: -1, _id: -1 } },
+    { $lookup: { from: WorkoutExercise.collection.name, localField: '_id', foreignField: 'workout_session', as: 'exercises' } },
+    { $set: { exercises: { $filter: { input: '$exercises', as: 'e', cond: { $eq: ['$$e.exercise_base', current.exercise_base] } } } } },
+    // Duplicate entries in a session are ambiguous; do not count them twice.
+    { $match: { 'exercises.0': { $exists: true } } }, { $limit: 2 },
+    { $project: { _id: 0, completed_at: 1, sets: { $cond: [{ $eq: [{ $size: '$exercises' }, 1] }, { $arrayElemAt: ['$exercises.sets', 0] }, []] } } },
+  ]) : [];
+  const safeHistory = history.map(h => ({ completed_at: h.completed_at, sets: h.sets.map(s => ({ weight: s.weight, reps: s.reps, completed: s.completed })) }));
+  res.json(require('../services/progression').recommend(current, safeHistory, increment));
+});
 router.delete('/exercises/:exerciseId/sets/:setId', ownedActiveExercise, async (req, res) => {
   const exercise = req.workoutExercise;
   if (!exercise.sets.some(set => String(set._id) === req.params.setId)) return res.status(404).json({ error: 'Set not found' });
