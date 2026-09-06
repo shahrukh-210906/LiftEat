@@ -31,7 +31,7 @@ export function QuickActions() {
           <Link
             key={action.path}
             to={action.path}
-            className="group relative rounded-2xl border border-black/[0.06] bg-[#f7f5ec] p-4 flex items-center gap-4 overflow-hidden transition-all hover:bg-accent hover:border-accent"
+            className="group relative rounded-xl border border-black/[0.08] bg-white p-4 flex items-center gap-4 overflow-hidden transition-all hover:bg-black/[0.03] hover:border-black/20"
           >
             {/* Minimal Icon Container */}
             <div className="w-12 h-12 rounded-2xl bg-foreground text-white flex items-center justify-center shadow-lg shadow-black/15 transition-all duration-500 group-hover:scale-105 group-hover:-rotate-3">

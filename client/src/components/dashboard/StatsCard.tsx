@@ -15,12 +15,12 @@ export function StatsCard({ title, value, subtitle, icon, trend }: StatsCardProp
         <p className="eyebrow">{title}</p>
         <div className="flex items-baseline gap-2 mt-2">
           <h3 className="text-3xl font-black text-foreground tracking-tight">{value}</h3>
-          {trend === "up" && <span className="w-2 h-2 rounded-full bg-accent ring-4 ring-accent/20 animate-pulse" />}
+          {trend === "up" && <span className="w-2 h-2 rounded-full bg-black ring-4 ring-black/10 animate-pulse" />}
         </div>
         {subtitle && <p className="text-xs text-gray-400 mt-1 font-medium">{subtitle}</p>}
       </div>
       
-      <div className="p-3 rounded-2xl bg-secondary text-foreground/55 group-hover:bg-accent group-hover:text-foreground transition-colors duration-300">
+      <div className="p-3 rounded-xl bg-secondary text-foreground/55 group-hover:bg-black group-hover:text-white transition-colors duration-300">
         {icon}
       </div>
     </div>

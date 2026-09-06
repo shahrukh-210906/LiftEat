@@ -60,19 +60,17 @@ export default function Workout() {
     <AppLayout>
        <div className="space-y-8 animate-in fade-in duration-700">
          
-         <header className="relative overflow-hidden rounded-[2rem] bg-[#11151d] p-6 text-white md:p-9">
-           <div className="absolute -right-12 -top-24 h-72 w-72 rounded-full bg-[#c6ff40]/10 blur-sm" />
-           <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-7">
-           <div className="space-y-2"><span className="lime-chip mb-2">876 movements · every setup</span>
+         <header className="flex flex-col md:flex-row md:items-end justify-between gap-7 border-b border-black/10 pb-8">
+           <div className="space-y-2"><span className="mb-3 inline-block text-xs font-bold uppercase tracking-widest text-black/35">Exercise library</span>
              <h1 className="text-4xl md:text-5xl font-black tracking-[-0.04em]">Build your session.</h1>
-             <p className="text-white/50 font-medium max-w-md">Find the right movement, save your favorites, or launch a routine in seconds.</p>
+             <p className="text-black/45 font-medium max-w-md">Find a movement, save it, or start a routine.</p>
            </div>
            
            <div className="flex flex-wrap gap-3">
              <Button 
                variant="outline"
                onClick={handleViewRoutines}
-               className="h-12 px-5 border-white/15 bg-white/[0.06] text-white text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-[#11151d] transition-all active:scale-95"
+               className="h-11 px-5 border-black/15 bg-white text-black text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
              >
                <List className="w-4 h-4 mr-2" /> My Routines
              </Button>
@@ -80,18 +78,17 @@ export default function Workout() {
              <Button 
                variant="outline"
                onClick={handleCreateRoutine}
-               className="h-12 px-5 border-white/15 bg-white/[0.06] text-white text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-[#11151d] transition-all active:scale-95"
+               className="h-11 px-5 border-black/15 bg-white text-black text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
              >
                <Plus className="w-4 h-4 mr-2" /> Create Routine
              </Button>
 
              <Button 
                onClick={handleQuickStart}
-               className="bg-[#c6ff40] text-[#11151d] hover:bg-[#d4ff6a] px-7 h-12 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-black/10 active:scale-95 transition-transform"
+               className="bg-black text-white hover:bg-black/80 px-7 h-11 rounded-xl text-sm font-bold uppercase tracking-widest transition-colors"
              >
                <Play className="w-4 h-4 mr-2 fill-current" /> Quick Start
              </Button>
-           </div>
            </div>
          </header>
          
@@ -114,7 +111,7 @@ export default function Workout() {
                   onClick={() => setCategory(cat)}
                   className={`px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 ${
                     category === cat 
-                    ? "bg-[#11151d] text-[#c6ff40] shadow-lg shadow-black/15"
+                    ? "bg-black text-white shadow-sm"
                     : "text-gray-400 hover:bg-secondary hover:text-black"
                   }`}
                 >
@@ -165,7 +162,7 @@ export default function Workout() {
 
                  <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
                    <div className="space-y-2">
-                     <h3 className="text-2xl font-black text-white leading-none tracking-tight transition-colors group-hover:text-[#c6ff40]">
+                     <h3 className="text-2xl font-black text-white leading-none tracking-tight">
                        {ex.name}
                      </h3>
                      
@@ -185,7 +182,7 @@ export default function Workout() {
                  </div>
 
                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
-                   <div className="bg-[#c6ff40] text-[#11151d] px-6 py-2 rounded-full font-black text-sm flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
+                   <div className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
                      View Details <ArrowUpRight className="w-4 h-4" />
                    </div>
                  </div>

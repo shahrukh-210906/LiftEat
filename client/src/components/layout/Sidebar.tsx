@@ -21,13 +21,13 @@ export function Sidebar() {
       - top-10: Pushes it down from the top edge
       - ml-6: Pushes it away from the left edge
     */
-    <div className="h-[calc(100vh-3rem)] sticky top-6 ml-6 flex flex-col rounded-[2rem] bg-[#11151d] p-5 text-white shadow-[0_24px_70px_rgba(17,21,29,0.22)]">
+    <div className="h-screen sticky top-0 flex flex-col border-r border-black/[0.08] bg-white p-5">
       {/* Logo Area */}
-      <div className="mb-10 flex items-center gap-3 px-2 pt-2">
-        <div className="w-11 h-11 rounded-2xl bg-[#c6ff40] flex items-center justify-center shadow-lg shadow-[#c6ff40]/15 -rotate-3">
-          <Dumbbell className="w-5 h-5 text-[#11151d]" />
+      <div className="mb-12 flex items-center gap-3 px-2 pt-2">
+        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center">
+          <Dumbbell className="w-5 h-5 text-white" />
         </div>
-        <div><span className="font-black text-xl tracking-tight">LiftEat</span><p className="text-[0.55rem] tracking-[0.2em] text-white/40">TRAIN · FUEL · REPEAT</p></div>
+        <div><span className="font-black text-xl tracking-tight text-black">LiftEat</span><p className="text-[0.55rem] tracking-[0.2em] text-black/35">TRAIN · FUEL · REPEAT</p></div>
       </div>
 
       {/* Navigation */}
@@ -41,8 +41,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group",
                 isActive
-                  ? "bg-[#c6ff40] text-[#11151d] shadow-xl shadow-[#c6ff40]/10"
-                  : "text-white/50 hover:bg-white/[0.07] hover:text-white hover:translate-x-1"
+                  ? "bg-black text-white"
+                  : "text-black/40 hover:bg-black/[0.04] hover:text-black"
               )}
             >
               <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110")} />
@@ -53,9 +53,9 @@ export function Sidebar() {
       </nav>
 
       {/* Footer Action */}
-      <div className="mt-auto pt-5 border-t border-white/10">
+      <div className="mt-auto pt-5 border-t border-black/[0.08]">
         <button 
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/40 hover:text-white hover:bg-white/[0.07] transition-all duration-300 group"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-black/40 hover:text-black hover:bg-black/[0.04] transition-all duration-300 group"
           onClick={() => signOut()}
         >
           <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />

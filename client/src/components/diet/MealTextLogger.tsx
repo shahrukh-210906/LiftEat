@@ -34,12 +34,11 @@ export function MealTextLogger({ onSaved }: { onSaved: () => void }) {
     catch (e: any) { setError(e.response?.data?.error || 'Could not save. Retry to avoid creating a duplicate estimate.'); }
     finally { setBusy(false); }
   };
-  return <section className="relative overflow-hidden rounded-[2rem] border border-black/[0.06] bg-[#eef5da] p-5 md:p-7 space-y-4">
-    <div className="absolute -right-10 -top-14 h-40 w-40 rounded-full border-[2rem] border-white/30" />
-    <div className="relative"><div className="mb-3 inline-flex rounded-xl bg-[#11151d] p-2.5 text-[#c6ff40]"><Sparkles className="h-5 w-5" /></div><h2 className="font-black text-2xl tracking-tight">Describe your meal</h2>
+  return <section className="rounded-2xl border border-black/[0.08] bg-white p-5 md:p-7 space-y-4 shadow-sm">
+    <div><div className="mb-3 inline-flex rounded-xl bg-black p-2.5 text-white"><Sparkles className="h-5 w-5" /></div><h2 className="font-black text-2xl tracking-tight">Describe your meal</h2>
     <p className="mt-1 text-sm text-foreground/60">Gemini estimates portions and macros. You stay in control before anything is saved.</p></div>
     <textarea aria-label="Meal description" maxLength={2000} rows={3} disabled={busy} value={text} onChange={e => { setText(e.target.value); setDraft(null); setSaved(false); }} placeholder="Two boiled eggs, 150 g cooked rice and a banana" className="relative w-full resize-none rounded-2xl border border-black/10 bg-white/85 p-4 text-sm shadow-sm placeholder:text-foreground/30" />
-    <Button className="relative rounded-2xl bg-[#11151d] text-white hover:bg-[#11151d]/90" disabled={busy || !text.trim()} onClick={estimate}>{busy ? 'Working…' : <>Estimate meal <ArrowRight className="ml-2 h-4 w-4" /></>}</Button>
+    <Button className="rounded-xl bg-black text-white hover:bg-black/80" disabled={busy || !text.trim()} onClick={estimate}>{busy ? 'Working…' : <>Estimate meal <ArrowRight className="ml-2 h-4 w-4" /></>}</Button>
     {error && <p role="alert" className="text-red-600 text-sm">{error}</p>}
     {saved && <p role="status" className="text-green-700">Meal added to today’s log.</p>}
     {draft && <fieldset disabled={busy} className="space-y-4">

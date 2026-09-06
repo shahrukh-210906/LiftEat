@@ -20,14 +20,11 @@ export default function Diet() {
   return (
     <AppLayout>
       <div className="space-y-8 animate-in fade-in duration-500">
-        <header className="relative overflow-hidden rounded-[2rem] bg-[#11151d] px-6 py-7 text-white md:px-9 md:py-8">
-          <div className="absolute right-8 top-0 h-full w-40 -skew-x-12 bg-[#c6ff40]/10" />
-          <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-            <div><span className="lime-chip mb-4"><Sparkles className="h-3.5 w-3.5" /> AI assisted logging</span><h1 className="text-4xl font-black tracking-[-0.04em] md:text-5xl">Fuel the work.</h1><p className="mt-2 text-sm text-white/55">Log naturally, review the estimate, and stay on target.</p></div>
-            <Button aria-label="Add Food" onClick={() => setAddingFood(true)} className="w-fit rounded-2xl bg-white text-[#11151d] hover:bg-[#c6ff40]">
+        <header className="flex flex-col justify-between gap-6 border-b border-black/10 pb-8 sm:flex-row sm:items-end">
+            <div><span className="mb-4 inline-flex items-center gap-2 text-xs font-bold text-black/40"><Sparkles className="h-3.5 w-3.5" /> AI ASSISTED LOGGING</span><h1 className="text-4xl font-black tracking-[-0.04em] md:text-5xl">Nutrition</h1><p className="mt-2 text-sm text-black/45">A simple view of what you have eaten today.</p></div>
+            <Button aria-label="Add Food" onClick={() => setAddingFood(true)} className="w-fit rounded-xl bg-black text-white hover:bg-black/80">
               <Plus className="w-4 h-4 mr-2" /> Add food manually
             </Button>
-          </div>
         </header>
 
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -36,7 +33,7 @@ export default function Diet() {
             return <article key={label} className="app-card p-5">
               <div className="mb-5 flex items-center justify-between"><span className="eyebrow">{label}</span><span className="rounded-xl bg-secondary p-2 text-foreground/60"><Icon className="h-4 w-4" /></span></div>
               <p className="text-3xl font-black tracking-tight">{value}<span className="ml-1 text-xs font-bold text-foreground/35">{unit}</span></p>
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-accent" style={{ width: `${progress}%` }} /></div>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-black" style={{ width: `${progress}%` }} /></div>
               <p className="mt-2 text-xs text-foreground/40">{Math.max(goal - value, 0)} {unit} remaining</p>
             </article>;
           })}

@@ -46,20 +46,17 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <header className="relative overflow-hidden rounded-[2rem] bg-[#11151d] px-6 py-7 text-white md:px-9 md:py-9">
-          <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[3rem] border-[#c6ff40]/10" />
-          <div className="relative flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
+        <header className="flex flex-col justify-between gap-6 border-b border-black/10 pb-8 sm:flex-row sm:items-end">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-bold text-white/70">
-                <Sparkles className="h-3.5 w-3.5 text-[#c6ff40]" /> Daily performance brief
+              <div className="mb-4 inline-flex items-center gap-2 text-xs font-bold text-black/40">
+                <Sparkles className="h-3.5 w-3.5" /> DAILY PERFORMANCE BRIEF
               </div>
-              <h1 className="max-w-2xl text-4xl font-black tracking-[-0.04em] md:text-5xl">Move with purpose,<br/><span className="text-[#c6ff40]">{firstName}.</span></h1>
-              <p className="mt-3 max-w-lg text-sm text-white/55">Your training, recovery and nutrition are working together. Here is what needs your attention today.</p>
+              <h1 className="max-w-2xl text-4xl font-black tracking-[-0.04em] text-black md:text-5xl">Good day, {firstName}.</h1>
+              <p className="mt-3 max-w-lg text-sm text-black/45">Your training and nutrition overview for today.</p>
             </div>
-            <Link to="/workout" className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#c6ff40] px-5 py-3 text-sm font-black text-[#11151d] transition-transform hover:-translate-y-0.5">
+            <Link to="/workout" className="inline-flex w-fit items-center gap-2 rounded-xl bg-black px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-black/80">
               Start training <ArrowUpRight className="h-4 w-4" />
             </Link>
-          </div>
         </header>
 
         <ProactiveInsights />
@@ -101,7 +98,7 @@ export default function Dashboard() {
               <h2 className="text-xl font-black text-foreground mb-4">
                 Quick Start
               </h2>
-              <div className="app-card p-4 md:p-5">
+              <div className="app-card p-4">
                 <QuickActions />
               </div>
             </section>
@@ -121,7 +118,7 @@ export default function Dashboard() {
                       {lastWorkout.duration_minutes} mins
                     </p>
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center group-hover:bg-accent group-hover:text-foreground transition-colors">
+                  <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
                     <Activity className="w-5 h-5" />
                   </div>
                 </Link>

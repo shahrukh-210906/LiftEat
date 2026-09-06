@@ -37,7 +37,7 @@ export function MacroProgress(props: MacroProgressProps) {
         {/* Custom Monochrome Progress Bar */}
         <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
           <div 
-            className="h-full bg-accent transition-all duration-500 ease-out rounded-full"
+            className="h-full bg-black transition-all duration-500 ease-out rounded-full"
             style={{ width: `${value}%` }} 
           />
         </div>

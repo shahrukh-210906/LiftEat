@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    --background: 48 38% 96%;
-    --foreground: 220 23% 10%;
+    --background: 0 0% 97%;
+    --foreground: 0 0% 7%;
     --card: 0 0% 100%;
-    --card-foreground: 220 23% 10%;
-    --primary: 220 23% 10%;
-    --primary-foreground: 78 92% 62%;
-    --secondary: 45 27% 91%;
-    --secondary-foreground: 220 23% 10%;
-    --muted: 45 22% 92%;
-    --muted-foreground: 218 10% 43%;
-    --accent: 78 92% 62%;
-    --accent-foreground: 220 23% 10%;
+    --card-foreground: 0 0% 7%;
+    --primary: 0 0% 7%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 93%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 7%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 23% 10%;
+    --popover-foreground: 0 0% 7%;
     --success: 147 62% 34%;
     --success-foreground: 0 0% 100%;
     --warning: 34 92% 52%;
-    --warning-foreground: 220 23% 10%;
-    --border: 44 18% 85%;
-    --input: 44 18% 85%;
-    --ring: 78 92% 48%;
-    --radius: 1.25rem;
+    --warning-foreground: 0 0% 7%;
+    --border: 0 0% 87%;
+    --input: 0 0% 87%;
+    --ring: 0 0% 12%;
+    --radius: 0.875rem;
   }
  
   html {
@@ -36,30 +36,27 @@
 
   body {
     @apply bg-background text-foreground antialiased min-h-screen;
-    background-image:
-      radial-gradient(circle at 8% 4%, rgba(198, 255, 64, 0.2), transparent 24rem),
-      radial-gradient(circle at 92% 28%, rgba(255, 212, 92, 0.12), transparent 28rem);
-    background-attachment: fixed;
+    background-color: #f7f7f7;
     font-feature-settings: "ss01" on, "cv02" on;
   }
 
   ::selection {
-    background: #c6ff40;
-    color: #11151d;
+    background: #171717;
+    color: #ffffff;
   }
 
   *:focus-visible {
-    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-foreground ring-offset-2 ring-offset-background;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply bg-white/75 backdrop-blur-xl border border-white/70 shadow-[0_12px_40px_rgba(17,21,29,0.06)] rounded-[1.75rem] transition-all duration-300;
+    @apply bg-white/90 backdrop-blur-xl border border-black/[0.08] shadow-sm rounded-2xl transition-all duration-300;
   }
 
   .hover-card {
-    @apply glass-card hover:bg-white hover:shadow-[0_20px_50px_rgba(17,21,29,0.1)] hover:-translate-y-1;
+    @apply glass-card hover:bg-white hover:border-black/20 hover:shadow-md;
   }
 
   .btn-primary-gradient {
@@ -71,7 +68,7 @@
   }
 
   .app-card {
-    @apply rounded-[1.75rem] border border-black/[0.06] bg-white shadow-[0_14px_45px_rgba(17,21,29,0.06)];
+    @apply rounded-2xl border border-black/[0.08] bg-white shadow-sm;
   }
 
   .eyebrow {
@@ -79,7 +76,7 @@
   }
 
   .lime-chip {
-    @apply inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1.5 text-xs font-black text-accent-foreground;
+    @apply inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-bold text-foreground/60;
   }
 
   .scrollbar-hide::-webkit-scrollbar {

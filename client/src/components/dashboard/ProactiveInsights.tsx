@@ -37,7 +37,7 @@ export function ProactiveInsights() {
     {error && <p role="status" className="text-sm text-amber-700">{error}</p>}
     {!data && !error && <p className="text-sm text-gray-500">Checking your recent activity…</p>}
     {data && !data.cards.length && <p className="text-sm text-gray-500">{data.refreshing ? 'Preparing your insights…' : 'You’re all caught up. Insights refresh automatically.'}</p>}
-    <div className="grid md:grid-cols-3 gap-3">{data?.cards.map(card => <article key={card.id} className="app-card p-5 space-y-3 border-l-4 border-l-accent">
+    <div className="grid md:grid-cols-3 gap-3">{data?.cards.map(card => <article key={card.id} className="app-card p-5 space-y-3">
       <div className="flex justify-between gap-2"><h3 className="font-bold">{card.title}</h3><button disabled={!!dismissing} aria-label={`Dismiss ${card.title}`} className="text-gray-400 hover:text-gray-800" onClick={() => dismiss(card.id)}>×</button></div>
       <p className="text-sm text-gray-600">{card.body}</p>
       <Link className="text-sm font-black text-foreground hover:underline underline-offset-4" to={card.href}>{card.action} →</Link>
