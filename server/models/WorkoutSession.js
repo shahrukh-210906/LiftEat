@@ -9,4 +9,5 @@ const workoutSessionSchema = new mongoose.Schema({
   is_active: { type: Boolean, default: true }
 });
 
+workoutSessionSchema.index({ user: 1, is_active: 1, completed_at: -1 });
 module.exports = mongoose.model('WorkoutSession', workoutSessionSchema);

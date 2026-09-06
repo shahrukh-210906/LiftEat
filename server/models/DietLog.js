@@ -15,4 +15,5 @@ const dietLogSchema = new mongoose.Schema({
   logged_at: { type: Date, default: Date.now }
 });
 
+dietLogSchema.index({ user: 1, logged_at: -1 });
 module.exports = mongoose.model('DietLog', dietLogSchema);

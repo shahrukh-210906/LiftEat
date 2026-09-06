@@ -5,7 +5,7 @@ import { AppLayout } from "../components/layout/AppLayout";
 import { StatsCard } from "../components/dashboard/StatsCard";
 import { MacroProgress } from "../components/dashboard/MacroProgress";
 import { QuickActions } from "../components/dashboard/QuickActions";
-import { AICoachWidget } from "../components/AICoachWidget";
+import { ProactiveInsights } from '@/components/dashboard/ProactiveInsights';
 import { useAuth } from "../contexts/AuthContext";
 import api from "../lib/api";
 import { WorkoutSession, DietLog } from "../lib/types";
@@ -61,7 +61,7 @@ export default function Dashboard() {
 
         {/* AI Widget - Keeps functionality but minimal style */}
         <div className="bg-transparent">
-          <AICoachWidget page="dashboard" contextData={{ user: firstName }} />
+          <ProactiveInsights />
         </div>
 
         {/* Stats Grid */}

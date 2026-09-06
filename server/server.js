@@ -6,8 +6,9 @@ async function start() {
   if (process.env.FIREBASE_PROJECT_ID) require('./firebase').auth();
   else if (!process.env.JWT_SECRET) throw new Error('Configure Firebase or JWT_SECRET');
   await mongoose.connect(uri, { serverSelectionTimeoutMS: 15000 });
+  const stopInsights = require('./jobs/insights').startInsightJob();
   const server = require('./app').listen(process.env.PORT || 5000, () => console.log('LiftEat API is ready'));
-  const shutdown = () => server.close(async () => { await mongoose.disconnect(); process.exit(0); });
+  const shutdown = () => server.close(async () => { await stopInsights(); await mongoose.disconnect(); process.exit(0); });
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 }

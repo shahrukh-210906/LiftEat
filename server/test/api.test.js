@@ -265,3 +265,24 @@ test('meal estimates require confirmation, allow corrections, and save idempoten
   assert.equal((await request('/diet/estimate',alice.token,'POST',{text:'hello'})).status,422);
  }finally{stub.mock.restore();}
 });
+
+test('dashboard insights isolate accounts, persist dismissals, refresh and never call Gemini',async()=>{
+ const User=require('../models/User');const S=require('../models/WorkoutSession');const D=require('../models/DietLog');const Snap=require('../models/InsightSnapshot');await Snap.init();
+ const fresh=await User.create({email:'insight-test@example.com',password:'not-a-login-hash',fullName:'Insight Test'});
+ const token=jwt.sign({id:fresh.id},process.env.JWT_SECRET,{expiresIn:'1h'});
+ const stub=mock.method(require('../services/gemini'),'generate',async()=>{throw Error('Should not call Gemini');});
+ try{
+  await S.create({user:fresh.id,name:'Own',is_active:false,completed_at:new Date()});
+  await D.create({user:fresh.id,food_name:'Own',calories:321,protein:22});
+  const r=await request('/dashboard/insights',token);assert.equal(r.status,200);assert.equal(r.data.cards.length,3);assert.match(JSON.stringify(r.data.cards),/321 kcal/);
+  assert.doesNotMatch(JSON.stringify((await request('/dashboard/insights',bob.token)).data.cards),/321 kcal/);
+  const id=r.data.cards[0].id;
+  assert.equal((await request('/dashboard/insights/'+encodeURIComponent(id)+'/dismiss',token,'POST',{})).status,200);
+  assert.ok(!(await request('/dashboard/insights',token)).data.cards.some(c=>c.id===id));
+  await Snap.updateOne({user:fresh.id},{$set:{computedAt:new Date(0)}});
+  assert.ok(!(await request('/dashboard/insights',token)).data.cards.some(c=>c.id===id));
+  assert.equal(stub.mock.callCount(),0);
+  assert.equal((await request('/dashboard/insights')).status,401);
+  assert.equal((await request('/dashboard/insights/not-real/dismiss',token,'POST',{})).status,404);
+ }finally{stub.mock.restore();}
+});

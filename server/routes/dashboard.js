@@ -4,6 +4,16 @@ const auth = require('../middleware/auth');
 const WorkoutSession = require('../models/WorkoutSession');
 const WorkoutExercise = require('../models/WorkoutExercise');
 const DietLog = require('../models/DietLog');
+const Snapshot = require('../models/InsightSnapshot');
+router.get('/insights', auth, async (req, res) => {
+  const snapshot = await require('../services/insights').refresh(req.user.id);
+  res.json({ computed_at: snapshot.computedAt || null, cards: snapshot.cards.filter(card => !snapshot.dismissed.includes(card.id)), refreshing: !snapshot.computedAt });
+});
+router.post('/insights/:id/dismiss', auth, async (req, res) => {
+  const snapshot = await Snapshot.findOneAndUpdate({ user: req.user.id, 'cards.id': req.params.id }, { $addToSet: { dismissed: req.params.id } }, { new: true });
+  if (!snapshot) return res.status(404).json({ error: 'Insight not found' });
+  res.json({ success: true });
+});
 
 router.get('/stats', auth, async (req, res) => {
   // 1. Last Workout
