@@ -86,6 +86,16 @@ export interface FoodItem {
   fat_per_100g: number;
 }
 
+export interface SavedMeal {
+  _id: string;
+  name: string;
+  quantity_g: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export interface AIChatMessage {
   id: string;
   user_id: string;

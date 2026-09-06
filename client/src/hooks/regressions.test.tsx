@@ -64,6 +64,8 @@ it('nutrition buttons open the food picker and delete an existing meal', async (
   await waitFor(() => expect(remove).toHaveBeenCalledWith('/diet/log/log-1'));
   fireEvent.click(screen.getByRole('button', { name: 'Add Food' }));
   expect(screen.getByRole('dialog')).toBeTruthy();
+  fireEvent.click(screen.getByText('Search foods'));
+  await waitFor(() => expect(screen.getByRole('dialog')).toBeTruthy());
   fireEvent.click(screen.getByText('Rice'));
   fireEvent.click(screen.getByRole('button', { name: 'Add Log' }));
   await waitFor(() => expect(post).toHaveBeenCalledWith('/diet/log', expect.objectContaining({ food_name: 'Rice', quantity_g: 100, calories: 130 })));

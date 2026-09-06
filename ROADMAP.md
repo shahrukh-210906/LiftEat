@@ -5,7 +5,7 @@ Minimal black, white and gray UI. Fixed desktop sidebar. Improve usability and r
 
 ## Usability and reliability phase
 1. Today screen and clearer navigation: current iteration. Prioritize training, meal logging and resuming an active workout. Keep existing URLs working.
-2. Simplify workout and meal logging: routine-first Train screen; one meal entry point with recent/search/text/photo choices; favorite and repeat meals.
+2. Simplify workout and meal logging: completed. Train is routine-first and resumes active sessions; Nutrition has one entry point with recent/search/text/photo choices plus saved and repeat meals.
 3. Autosave and recovery: retain drafts, prevent duplicate submissions, recover interrupted sessions, useful retry and loading states.
 4. Progress screen: real strength, consistency and nutrition trends with date ranges. Add primary navigation only when functional.
 5. Production foundation: error monitoring, backups with restore verification, rate limits, release checks and secure deployment configuration.

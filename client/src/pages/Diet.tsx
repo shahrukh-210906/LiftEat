@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Flame, Beef, Wheat, Droplets, Sparkles } from "lucide-react";
+import { Plus, X, Flame, Beef, Wheat, Droplets, Sparkles, Bookmark, Repeat2 } from "lucide-react";
 import { useDiet } from "@/hooks/useDiet";
 import { AddFoodDialog } from "@/components/diet/AddFoodDialog";
-import { MealTextLogger } from '@/components/diet/MealTextLogger';
-import { MealPhotoLogger } from '@/components/diet/MealPhotoLogger';
+import { MealLogDialog } from '@/components/diet/MealLogDialog';
 
 export default function Diet() {
-  const { profile, todaysLogs: logs, foodItems, totals, addLog, deleteLog, refreshData } = useDiet();
+  const { profile, todaysLogs: logs, foodItems, recentMeals, savedMeals, totals, addLog, deleteLog, repeatMeal, saveMeal, logSavedMeal, removeSavedMeal, refreshData } = useDiet();
   const [addingFood, setAddingFood] = useState(false);
+  const [loggingMeal, setLoggingMeal] = useState(false);
   const calorieGoal = profile?.daily_calorie_goal || 2000;
   const metrics = [
     { label: 'Calories', value: totals.calories, goal: calorieGoal, unit: 'kcal', icon: Flame },
@@ -23,8 +23,8 @@ export default function Diet() {
       <div className="space-y-8 animate-in fade-in duration-500">
         <header className="flex flex-col justify-between gap-6 border-b border-black/10 pb-8 sm:flex-row sm:items-end">
             <div><span className="mb-4 inline-flex items-center gap-2 text-xs font-bold text-black/40"><Sparkles className="h-3.5 w-3.5" /> AI ASSISTED LOGGING</span><h1 className="text-4xl font-black tracking-[-0.04em] md:text-5xl">Nutrition</h1><p className="mt-2 text-sm text-black/45">A simple view of what you have eaten today.</p></div>
-            <Button aria-label="Add Food" onClick={() => setAddingFood(true)} className="w-fit rounded-xl bg-black text-white hover:bg-black/80">
-              <Plus className="w-4 h-4 mr-2" /> Add food manually
+            <Button aria-label="Add Food" onClick={() => setLoggingMeal(true)} className="w-fit rounded-xl bg-black text-white hover:bg-black/80">
+              <Plus className="w-4 h-4 mr-2" /> Log meal
             </Button>
         </header>
 
@@ -40,10 +40,6 @@ export default function Diet() {
           })}
         </section>
 
-        <div className="grid items-start gap-4 xl:grid-cols-2">
-          <MealPhotoLogger onSaved={refreshData} />
-          <MealTextLogger onSaved={refreshData} />
-        </div>
         {/* Clean List */}
         <section className="app-card p-5 md:p-7">
            <div className="mb-2 flex items-center justify-between"><div><p className="eyebrow">Daily log</p><h3 className="mt-1 text-xl font-black">Today's meals</h3></div><span className="text-sm font-bold text-foreground/40">{logs.length} items</span></div>
@@ -56,9 +52,7 @@ export default function Diet() {
                     {log.source === 'ai_estimate' && <p className="mt-1 text-xs font-bold text-black/45">AI text estimate · reviewed by you</p>}
                     {log.source === 'ai_photo' && <p className="mt-1 text-xs font-bold text-black/45">AI photo estimate · reviewed by you</p>}
                   </div>
-                  <button aria-label={`Delete ${log.food_name}`} onClick={() => deleteLog(log._id)} className="text-gray-300 hover:text-red-500 sm:opacity-0 group-hover:opacity-100 transition-all p-2">
-                    <X className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center"><button aria-label={`Repeat ${log.food_name}`} title="Repeat meal" onClick={() => repeatMeal(log._id)} className="p-2 text-gray-400 hover:text-black"><Repeat2 className="w-4 h-4" /></button><button aria-label={`Save ${log.food_name}`} title="Save meal" onClick={() => saveMeal(log._id)} className="p-2 text-gray-400 hover:text-black"><Bookmark className="w-4 h-4" /></button><button aria-label={`Delete ${log.food_name}`} onClick={() => deleteLog(log._id)} className="text-gray-300 hover:text-red-500 transition-all p-2"><X className="w-5 h-5" /></button></div>
                </div>
              ))}
              {logs.length === 0 && (
@@ -68,6 +62,7 @@ export default function Diet() {
         </section>
 
       </div>
+      <MealLogDialog open={loggingMeal} onOpenChange={setLoggingMeal} recent={recentMeals} saved={savedMeals} onManual={() => { setLoggingMeal(false); setAddingFood(true); }} onRepeat={repeatMeal} onLogSaved={logSavedMeal} onRemoveSaved={removeSavedMeal} onSaved={refreshData} />
       <AddFoodDialog open={addingFood} onOpenChange={setAddingFood} foods={foodItems} onAdd={addLog} />
     </AppLayout>
   );

@@ -61,6 +61,20 @@ test('food logs can be created and deleted only by their owner', async () => {
   assert.equal((await request('/diet/log/' + created.data._id, alice.token, 'DELETE')).status, 200);
   assert.equal((await request('/diet/log', alice.token, 'POST', { food_name: 'Rice', quantity_g: -1, calories: 130 })).status, 400);
 });
+test('recent and saved meals can be reused only by their owner', async () => {
+  const source = await request('/diet/log', alice.token, 'POST', { food_name: 'Regular oats', quantity_g: 100, calories: 380, protein: 13, carbs: 68, fat: 7, meal_type: 'breakfast' });
+  assert.equal((await request('/diet/recent', alice.token)).data[0].food_name, 'Regular oats');
+  assert.equal((await request('/diet/recent/' + source.data._id + '/repeat', bob.token, 'POST', {})).status, 404);
+  const repeated = await request('/diet/recent/' + source.data._id + '/repeat', alice.token, 'POST', {});
+  assert.equal(repeated.status, 201);
+  const saved = await request('/diet/favorites/from-log/' + source.data._id, alice.token, 'POST', {});
+  assert.equal(saved.status, 201);
+  assert.equal((await request('/diet/favorites', bob.token)).data.length, 0);
+  assert.equal((await request('/diet/favorites/' + saved.data._id + '/log', bob.token, 'POST', {})).status, 404);
+  assert.equal((await request('/diet/favorites/' + saved.data._id + '/log', alice.token, 'POST', {})).status, 201);
+  assert.equal((await request('/diet/favorites/' + saved.data._id, bob.token, 'DELETE')).status, 404);
+  assert.equal((await request('/diet/favorites/' + saved.data._id, alice.token, 'DELETE')).status, 200);
+});
 test('quick workout supports adding exercises and sets, enforces ownership and completion', async () => {
   const started = await request('/workouts/start', alice.token, 'POST', { name: 'Quick session' });
   assert.equal(started.status, 201);
@@ -166,6 +180,9 @@ test('Today returns only the signed-in account active workout', async () => {
   assert.equal(result.status, 200);
   assert.equal(result.data.activeWorkout._id, own.id);
   assert.doesNotMatch(JSON.stringify(result.data), /Private other workout/);
+  const training = await request('/workouts/overview', alice.token);
+  assert.equal(training.status, 200);
+  assert.doesNotMatch(JSON.stringify(training.data), /Private other workout/);
 });
 test('search treats regex characters as literal text', async () => {
   const result = await request('/exercises?query=%5B', alice.token);

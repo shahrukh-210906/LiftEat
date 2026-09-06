@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/badge";
-import { Search, Dumbbell, Play, ArrowUpRight, Heart, Plus, List } from "lucide-react";
+import { Search, Dumbbell, Play, ArrowUpRight, Heart, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useWorkoutLibrary } from "@/hooks/useWorkoutLibrary";
+import api from '@/lib/api';
+import { WorkoutRoutine, WorkoutSession } from '@/lib/types';
 
 const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Abs", "Cardio"];
 
@@ -17,14 +19,17 @@ export default function Workout() {
   const { user } = useAuth();
   const favoritesKey = 'lifteat:favorites:' + user?.id;
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [overview, setOverview] = useState<{ activeWorkout: WorkoutSession | null; routines: WorkoutRoutine[] }>({ activeWorkout: null, routines: [] });
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
       setFavorites(new Set(Array.isArray(saved) ? saved.filter(id => typeof id === 'string') : []));
     } catch { setFavorites(new Set()); }
   }, [favoritesKey]);
+  useEffect(() => { api.get('/workouts/overview').then(({ data }) => setOverview(data)).catch(() => toast.error('Could not load your training overview')); }, []);
 
   const handleQuickStart = async () => {
+    if (overview.activeWorkout) return navigate(`/workout/${overview.activeWorkout._id}`);
     try {
       await startSession("Quick Start Workout");
     } catch (error) {
@@ -36,9 +41,7 @@ export default function Workout() {
     navigate('/routines/new');
   };
 
-  const handleViewRoutines = () => {
-    navigate('/routines');
-  };
+  const startRoutine = async (id: string) => { try { const { data } = await api.post(`/workouts/start/${id}`); navigate(`/workout/${data._id}`); } catch { toast.error('Failed to start workout'); } };
 
   const toggleFavorite = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); 
@@ -69,14 +72,6 @@ export default function Workout() {
            <div className="flex flex-wrap gap-3">
              <Button 
                variant="outline"
-               onClick={handleViewRoutines}
-               className="h-11 px-5 border-black/15 bg-white text-black text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
-             >
-               <List className="w-4 h-4 mr-2" /> My Routines
-             </Button>
-
-             <Button 
-               variant="outline"
                onClick={handleCreateRoutine}
                className="h-11 px-5 border-black/15 bg-white text-black text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
              >
@@ -87,10 +82,18 @@ export default function Workout() {
                onClick={handleQuickStart}
                className="bg-black text-white hover:bg-black/80 px-7 h-11 rounded-xl text-sm font-bold uppercase tracking-widest transition-colors"
              >
-               <Play className="w-4 h-4 mr-2 fill-current" /> Quick Start
+               <Play className="w-4 h-4 mr-2 fill-current" /> {overview.activeWorkout ? 'Continue' : 'Quick Start'}
              </Button>
            </div>
          </header>
+
+         {overview.activeWorkout && <section className="app-card flex flex-col justify-between gap-4 border-black bg-black p-5 text-white sm:flex-row sm:items-center"><div><p className="text-xs font-bold uppercase tracking-widest text-white/45">In progress</p><h2 className="mt-1 text-xl font-black">{overview.activeWorkout.name}</h2></div><Button onClick={() => navigate(`/workout/${overview.activeWorkout?._id}`)} className="bg-white text-black hover:bg-gray-200"><Play className="mr-2 h-4 w-4" /> Continue workout</Button></section>}
+
+         <section className="space-y-4"><div className="flex items-end justify-between"><div><p className="eyebrow">Start here</p><h2 className="mt-1 text-2xl font-black">Your routines</h2></div><button onClick={() => navigate('/routines')} className="text-sm font-bold underline underline-offset-4">View all</button></div>
+           {overview.routines.length ? <div className="grid gap-3 md:grid-cols-3">{overview.routines.slice(0, 3).map(routine => <article key={routine._id} className="app-card p-5"><p className="text-xs font-bold uppercase tracking-widest text-gray-400">{routine.exercises.length} exercises</p><h3 className="mt-2 truncate text-lg font-black capitalize">{routine.name}</h3><Button disabled={!!overview.activeWorkout} onClick={() => startRoutine(routine._id)} className="mt-5 w-full bg-black text-white">{overview.activeWorkout ? 'Finish active workout first' : 'Start routine'}</Button></article>)}</div> : <div className="rounded-2xl border border-dashed p-6 text-sm text-gray-500">No routines yet. <button onClick={handleCreateRoutine} className="font-bold text-black underline">Create your first routine</button>.</div>}
+         </section>
+
+         <div className="border-t border-black/10 pt-8"><p className="eyebrow">Exercise library</p><h2 className="mt-1 text-2xl font-black">Browse movements</h2></div>
          
          {/* Floating Filter Bar */}
          <div className="sticky top-4 z-30 app-card p-2 flex flex-col md:flex-row gap-2 items-center">

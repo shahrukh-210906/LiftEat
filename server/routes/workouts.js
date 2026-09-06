@@ -9,6 +9,13 @@ router.use(auth);
 const aiWorkout = require('../controllers/aiWorkoutController');
 router.post('/ai/generate', aiWorkout.generate);
 router.post('/ai/:id/save', aiWorkout.save);
+router.get('/overview', async (req, res) => {
+  const [activeWorkout, routines] = await Promise.all([
+    WorkoutSession.findOne({ user: req.user.id, is_active: true }).sort({ started_at: -1 }),
+    WorkoutRoutine.find({ user: req.user.id, status: { $ne: 'draft' } }).populate('exercises.exercise', '-notes').sort({ created_at: -1 }).limit(6),
+  ]);
+  res.json({ activeWorkout, routines });
+});
 router.get('/routines', async (req, res) => {
   res.json(await WorkoutRoutine.find({ user: req.user.id, status: { $ne: 'draft' } }).populate('exercises.exercise', '-notes').sort({ created_at: -1 }));
 });
