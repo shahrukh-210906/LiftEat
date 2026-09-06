@@ -21,17 +21,17 @@ export function Sidebar() {
       - top-10: Pushes it down from the top edge
       - ml-6: Pushes it away from the left edge
     */
-    <div className="h-[calc(100vh-5rem)] sticky top-10 ml-6 flex flex-col glass-card p-6">
+    <div className="h-[calc(100vh-3rem)] sticky top-6 ml-6 flex flex-col rounded-[2rem] bg-[#11151d] p-5 text-white shadow-[0_24px_70px_rgba(17,21,29,0.22)]">
       {/* Logo Area */}
-      <div className="mb-12 flex items-center gap-3 px-2">
-        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shadow-lg shadow-black/20">
-          <Dumbbell className="w-5 h-5 text-white" />
+      <div className="mb-10 flex items-center gap-3 px-2 pt-2">
+        <div className="w-11 h-11 rounded-2xl bg-[#c6ff40] flex items-center justify-center shadow-lg shadow-[#c6ff40]/15 -rotate-3">
+          <Dumbbell className="w-5 h-5 text-[#11151d]" />
         </div>
-        <span className="font-bold text-xl tracking-tight text-black">LiftEat</span>
+        <div><span className="font-black text-xl tracking-tight">LiftEat</span><p className="text-[0.55rem] tracking-[0.2em] text-white/40">TRAIN · FUEL · REPEAT</p></div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-3">
+      <nav className="flex-1 space-y-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -41,8 +41,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group",
                 isActive
-                  ? "bg-black text-white shadow-xl shadow-black/10 translate-x-2"
-                  : "text-gray-400 hover:bg-white/60 hover:text-black hover:translate-x-1"
+                  ? "bg-[#c6ff40] text-[#11151d] shadow-xl shadow-[#c6ff40]/10"
+                  : "text-white/50 hover:bg-white/[0.07] hover:text-white hover:translate-x-1"
               )}
             >
               <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110")} />
@@ -53,9 +53,9 @@ export function Sidebar() {
       </nav>
 
       {/* Footer Action */}
-      <div className="mt-auto pt-6 border-t border-gray-100/50">
+      <div className="mt-auto pt-5 border-t border-white/10">
         <button 
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50/50 transition-all duration-300 group"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/40 hover:text-white hover:bg-white/[0.07] transition-all duration-300 group"
           onClick={() => signOut()}
         >
           <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />

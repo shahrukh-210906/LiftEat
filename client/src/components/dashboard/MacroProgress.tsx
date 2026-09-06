@@ -25,7 +25,7 @@ export function MacroProgress(props: MacroProgressProps) {
     return (
       <div className="py-3 group">
         <div className="flex items-end justify-between mb-2">
-          <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          <span className="eyebrow">
             {label}
           </span>
           <div className="text-right">
@@ -35,9 +35,9 @@ export function MacroProgress(props: MacroProgressProps) {
         </div>
         
         {/* Custom Monochrome Progress Bar */}
-        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
           <div 
-            className="h-full bg-black transition-all duration-500 ease-out" 
+            className="h-full bg-accent transition-all duration-500 ease-out rounded-full"
             style={{ width: `${value}%` }} 
           />
         </div>

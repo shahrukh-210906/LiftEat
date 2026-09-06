@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/badge";
-// ADDED: List icon for the new button
 import { Search, Dumbbell, Play, ArrowUpRight, Heart, Plus, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,7 +36,6 @@ export default function Workout() {
     navigate('/routines/new');
   };
 
-  // ADDED: Handler for viewing routines
   const handleViewRoutines = () => {
     navigate('/routines');
   };
@@ -62,22 +60,19 @@ export default function Workout() {
     <AppLayout>
        <div className="space-y-8 animate-in fade-in duration-700">
          
-         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-           <div className="space-y-2">
-             <h1 className="text-4xl md:text-5xl font-black text-black tracking-tight">
-               Library
-             </h1>
-             <p className="text-gray-400 font-medium max-w-sm">
-               Explore the collection. Build your perfect routine.
-             </p>
+         <header className="relative overflow-hidden rounded-[2rem] bg-[#11151d] p-6 text-white md:p-9">
+           <div className="absolute -right-12 -top-24 h-72 w-72 rounded-full bg-[#c6ff40]/10 blur-sm" />
+           <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-7">
+           <div className="space-y-2"><span className="lime-chip mb-2">876 movements · every setup</span>
+             <h1 className="text-4xl md:text-5xl font-black tracking-[-0.04em]">Build your session.</h1>
+             <p className="text-white/50 font-medium max-w-md">Find the right movement, save your favorites, or launch a routine in seconds.</p>
            </div>
            
            <div className="flex flex-wrap gap-3">
-             {/* ADDED: View Routines Button */}
              <Button 
                variant="outline"
                onClick={handleViewRoutines}
-               className="h-12 px-6 border-2 border-black text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95"
+               className="h-12 px-5 border-white/15 bg-white/[0.06] text-white text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-[#11151d] transition-all active:scale-95"
              >
                <List className="w-4 h-4 mr-2" /> My Routines
              </Button>
@@ -85,24 +80,23 @@ export default function Workout() {
              <Button 
                variant="outline"
                onClick={handleCreateRoutine}
-               className="h-12 px-6 border-2 border-black text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95"
+               className="h-12 px-5 border-white/15 bg-white/[0.06] text-white text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-[#11151d] transition-all active:scale-95"
              >
                <Plus className="w-4 h-4 mr-2" /> Create Routine
              </Button>
 
              <Button 
                onClick={handleQuickStart}
-               className="btn-primary-gradient px-8 h-12 text-sm font-bold uppercase tracking-widest shadow-lg shadow-black/10 active:scale-95 transition-transform"
+               className="bg-[#c6ff40] text-[#11151d] hover:bg-[#d4ff6a] px-7 h-12 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-black/10 active:scale-95 transition-transform"
              >
                <Play className="w-4 h-4 mr-2 fill-current" /> Quick Start
              </Button>
            </div>
-         </div>
-
-         {/* ... Rest of the component (Floating Filter Bar, Grid Layout) remains unchanged ... */}
+           </div>
+         </header>
          
          {/* Floating Filter Bar */}
-         <div className="sticky top-6 z-30 glass-card p-2 flex flex-col md:flex-row gap-2 items-center shadow-xl shadow-black/5">
+         <div className="sticky top-4 z-30 app-card p-2 flex flex-col md:flex-row gap-2 items-center">
             <div className="relative flex-1 w-full min-w-0">
                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                <input 
@@ -120,8 +114,8 @@ export default function Workout() {
                   onClick={() => setCategory(cat)}
                   className={`px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 ${
                     category === cat 
-                    ? "bg-black text-white shadow-lg shadow-black/20 scale-105" 
-                    : "text-gray-400 hover:bg-gray-100 hover:text-black"
+                    ? "bg-[#11151d] text-[#c6ff40] shadow-lg shadow-black/15"
+                    : "text-gray-400 hover:bg-secondary hover:text-black"
                   }`}
                 >
                   {cat}
@@ -171,7 +165,7 @@ export default function Workout() {
 
                  <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
                    <div className="space-y-2">
-                     <h3 className="text-2xl font-black text-white leading-none tracking-tight transition-colors group-hover:text-blue-400">
+                     <h3 className="text-2xl font-black text-white leading-none tracking-tight transition-colors group-hover:text-[#c6ff40]">
                        {ex.name}
                      </h3>
                      
@@ -191,7 +185,7 @@ export default function Workout() {
                  </div>
 
                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
-                   <div className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
+                   <div className="bg-[#c6ff40] text-[#11151d] px-6 py-2 rounded-full font-black text-sm flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
                      View Details <ArrowUpRight className="w-4 h-4" />
                    </div>
                  </div>

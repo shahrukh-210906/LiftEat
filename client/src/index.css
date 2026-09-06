@@ -4,16 +4,30 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 48 38% 96%;
+    --foreground: 220 23% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
-    --ring: 0 0% 3.9%;
-    --radius: 1rem;
+    --card-foreground: 220 23% 10%;
+    --primary: 220 23% 10%;
+    --primary-foreground: 78 92% 62%;
+    --secondary: 45 27% 91%;
+    --secondary-foreground: 220 23% 10%;
+    --muted: 45 22% 92%;
+    --muted-foreground: 218 10% 43%;
+    --accent: 78 92% 62%;
+    --accent-foreground: 220 23% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 23% 10%;
+    --success: 147 62% 34%;
+    --success-foreground: 0 0% 100%;
+    --warning: 34 92% 52%;
+    --warning-foreground: 220 23% 10%;
+    --border: 44 18% 85%;
+    --input: 44 18% 85%;
+    --ring: 78 92% 48%;
+    --radius: 1.25rem;
   }
  
   html {
@@ -22,32 +36,50 @@
 
   body {
     @apply bg-background text-foreground antialiased min-h-screen;
-    /* Small Grid Net Pattern */
-    background-color: #ffffff;
-    background-image: 
-      linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-      linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
-    background-size: 24px 24px;
-    /* Optional: Fixes background during scroll for better "float" effect */
-    background-attachment: fixed; 
+    background-image:
+      radial-gradient(circle at 8% 4%, rgba(198, 255, 64, 0.2), transparent 24rem),
+      radial-gradient(circle at 92% 28%, rgba(255, 212, 92, 0.12), transparent 28rem);
+    background-attachment: fixed;
+    font-feature-settings: "ss01" on, "cv02" on;
+  }
+
+  ::selection {
+    background: #c6ff40;
+    color: #11151d;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-background;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply bg-white/60 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl transition-all duration-300;
+    @apply bg-white/75 backdrop-blur-xl border border-white/70 shadow-[0_12px_40px_rgba(17,21,29,0.06)] rounded-[1.75rem] transition-all duration-300;
   }
 
   .hover-card {
-    @apply glass-card hover:bg-white/80 hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] hover:-translate-y-1 cursor-pointer;
+    @apply glass-card hover:bg-white hover:shadow-[0_20px_50px_rgba(17,21,29,0.1)] hover:-translate-y-1;
   }
 
   .btn-primary-gradient {
-    @apply bg-black text-white hover:bg-neutral-800 shadow-lg shadow-black/20 rounded-2xl transition-all active:scale-95;
+    @apply bg-foreground text-white hover:bg-foreground/90 shadow-lg shadow-black/15 rounded-2xl transition-all active:scale-95;
   }
 
   .text-gradient {
-    @apply text-black;
+    @apply text-foreground;
+  }
+
+  .app-card {
+    @apply rounded-[1.75rem] border border-black/[0.06] bg-white shadow-[0_14px_45px_rgba(17,21,29,0.06)];
+  }
+
+  .eyebrow {
+    @apply text-[0.68rem] font-black uppercase tracking-[0.22em] text-foreground/45;
+  }
+
+  .lime-chip {
+    @apply inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1.5 text-xs font-black text-accent-foreground;
   }
 
   .scrollbar-hide::-webkit-scrollbar {

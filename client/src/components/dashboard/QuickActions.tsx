@@ -31,18 +31,18 @@ export function QuickActions() {
           <Link
             key={action.path}
             to={action.path}
-            className="hover-card group relative p-5 flex items-center gap-4 overflow-hidden"
+            className="group relative rounded-2xl border border-black/[0.06] bg-[#f7f5ec] p-4 flex items-center gap-4 overflow-hidden transition-all hover:bg-accent hover:border-accent"
           >
             {/* Minimal Icon Container */}
-            <div className="w-14 h-14 rounded-2xl bg-black text-white flex items-center justify-center shadow-lg shadow-black/20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-black/30">
+            <div className="w-12 h-12 rounded-2xl bg-foreground text-white flex items-center justify-center shadow-lg shadow-black/15 transition-all duration-500 group-hover:scale-105 group-hover:-rotate-3">
               <Icon className="w-6 h-6" />
             </div>
 
             <div className="flex-1 z-10">
-              <h3 className="font-bold text-gray-900 group-hover:text-black transition-colors">
+              <h3 className="font-black text-foreground transition-colors">
                 {action.label}
               </h3>
-              <p className="text-xs text-gray-400 font-medium group-hover:text-gray-500 transition-colors">
+              <p className="text-xs text-foreground/45 font-medium group-hover:text-foreground/65 transition-colors">
                 {action.subtitle}
               </p>
             </div>

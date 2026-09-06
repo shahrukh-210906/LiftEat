@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Activity, Flame, Zap, Trophy } from "lucide-react"; // Changed icons slightly for variety
+import { Activity, ArrowUpRight, Flame, Sparkles, Trophy, Zap } from "lucide-react";
 import { AppLayout } from "../components/layout/AppLayout";
 import { StatsCard } from "../components/dashboard/StatsCard";
 import { MacroProgress } from "../components/dashboard/MacroProgress";
@@ -46,23 +46,23 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Header Section */}
-        <div className="flex items-center justify-between px-2">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Hello, {firstName}
-            </h1>
-            <p className="text-gray-500 mt-1">
-              Ready to crush your goals today?
-            </p>
+        <header className="relative overflow-hidden rounded-[2rem] bg-[#11151d] px-6 py-7 text-white md:px-9 md:py-9">
+          <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[3rem] border-[#c6ff40]/10" />
+          <div className="relative flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-bold text-white/70">
+                <Sparkles className="h-3.5 w-3.5 text-[#c6ff40]" /> Daily performance brief
+              </div>
+              <h1 className="max-w-2xl text-4xl font-black tracking-[-0.04em] md:text-5xl">Move with purpose,<br/><span className="text-[#c6ff40]">{firstName}.</span></h1>
+              <p className="mt-3 max-w-lg text-sm text-white/55">Your training, recovery and nutrition are working together. Here is what needs your attention today.</p>
+            </div>
+            <Link to="/workout" className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#c6ff40] px-5 py-3 text-sm font-black text-[#11151d] transition-transform hover:-translate-y-0.5">
+              Start training <ArrowUpRight className="h-4 w-4" />
+            </Link>
           </div>
-          {/* Subtle profile badge or date could go here */}
-        </div>
+        </header>
 
-        {/* AI Widget - Keeps functionality but minimal style */}
-        <div className="bg-transparent">
-          <ProactiveInsights />
-        </div>
+        <ProactiveInsights />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -98,20 +98,20 @@ export default function Dashboard() {
           {/* Left Column: Quick Actions & Last Workout */}
           <div className="lg:col-span-2 space-y-8">
             <section>
-              <h2 className="text-lg font-bold text-gray-900 mb-4 px-2">
+              <h2 className="text-xl font-black text-foreground mb-4">
                 Quick Start
               </h2>
-              <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-gray-100">
+              <div className="app-card p-4 md:p-5">
                 <QuickActions />
               </div>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-gray-900 mb-4 px-2">
+              <h2 className="text-xl font-black text-foreground mb-4">
                 Last Session
               </h2>
               {lastWorkout ? (
-                <Link to={`/workout/${lastWorkout._id}`} className="group flex items-center justify-between p-6 rounded-3xl bg-white/80 border border-gray-100 hover:border-gray-300 transition-all cursor-pointer">
+                <Link to={`/workout/${lastWorkout._id}`} className="app-card group flex items-center justify-between p-6 transition-all hover:-translate-y-1">
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">
                       {lastWorkout.name}
@@ -121,7 +121,7 @@ export default function Dashboard() {
                       {lastWorkout.duration_minutes} mins
                     </p>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-gray-900 group-hover:text-white transition-colors">
+                  <div className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center group-hover:bg-accent group-hover:text-foreground transition-colors">
                     <Activity className="w-5 h-5" />
                   </div>
                 </Link>
@@ -135,10 +135,10 @@ export default function Dashboard() {
 
           {/* Right Column: Nutrition */}
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-4 px-2">
+            <h2 className="text-xl font-black text-foreground mb-4">
               Nutrition
             </h2>
-            <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-gray-100 space-y-6 hover:border-gray-300 hover:text-gray-900 hover:transition-all">
+            <div className="app-card p-6 space-y-5">
               <MacroProgress
                 label="Protein"
                 current={Math.round(todayTotals.protein)}

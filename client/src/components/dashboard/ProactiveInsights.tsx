@@ -32,15 +32,15 @@ export function ProactiveInsights() {
     catch { setError('Could not dismiss this insight. Please retry.'); }
     finally { setDismissing(null); }
   };
-  return <section aria-label="Your insights" className="space-y-3">
-    <div className="flex flex-wrap justify-between gap-2"><h2 className="text-lg font-bold">Your next steps</h2><span className="text-xs text-gray-500">From your activity logs · no AI credits needed</span></div>
+  return <section aria-label="Your insights" className="space-y-4">
+    <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="eyebrow mb-1">Proactive coach</p><h2 className="text-xl font-black">Your next steps</h2></div><span className="lime-chip">Live from your logs</span></div>
     {error && <p role="status" className="text-sm text-amber-700">{error}</p>}
     {!data && !error && <p className="text-sm text-gray-500">Checking your recent activity…</p>}
     {data && !data.cards.length && <p className="text-sm text-gray-500">{data.refreshing ? 'Preparing your insights…' : 'You’re all caught up. Insights refresh automatically.'}</p>}
-    <div className="grid md:grid-cols-3 gap-3">{data?.cards.map(card => <article key={card.id} className="border border-violet-100 rounded-2xl p-4 bg-white/80 space-y-3">
+    <div className="grid md:grid-cols-3 gap-3">{data?.cards.map(card => <article key={card.id} className="app-card p-5 space-y-3 border-l-4 border-l-accent">
       <div className="flex justify-between gap-2"><h3 className="font-bold">{card.title}</h3><button disabled={!!dismissing} aria-label={`Dismiss ${card.title}`} className="text-gray-400 hover:text-gray-800" onClick={() => dismiss(card.id)}>×</button></div>
       <p className="text-sm text-gray-600">{card.body}</p>
-      <Link className="text-sm font-semibold text-violet-700 underline underline-offset-4" to={card.href}>{card.action} →</Link>
+      <Link className="text-sm font-black text-foreground hover:underline underline-offset-4" to={card.href}>{card.action} →</Link>
     </article>)}</div>
     {data?.computed_at && <p className="text-xs text-gray-400">Updated {new Date(data.computed_at).toLocaleTimeString()} · Checks every 5 minutes. Dismissals reset at midnight UTC.</p>}
   </section>;
