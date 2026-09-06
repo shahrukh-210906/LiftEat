@@ -21,7 +21,7 @@ export function Sidebar() {
       - top-10: Pushes it down from the top edge
       - ml-6: Pushes it away from the left edge
     */
-    <div className="h-screen sticky top-0 flex flex-col border-r border-black/[0.08] bg-white p-5">
+    <div className="flex h-full flex-col overflow-y-auto border-r border-black/[0.08] bg-white p-5">
       {/* Logo Area */}
       <div className="mb-12 flex items-center gap-3 px-2 pt-2">
         <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center">

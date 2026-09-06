@@ -10,13 +10,13 @@ interface AppLayoutProps {
 export function AppLayout({ children, hideNav = false }: AppLayoutProps) {
   return (
     <div className="min-h-screen w-full relative overflow-x-hidden">
-      <div className="flex">
+      <div>
         
         {/* Desktop Sidebar Container 
             - Sticky positioning ensures it stays in view
             - Added 'h-screen' to fully occupy the vertical space for the sticky behavior
         */}
-        <aside className="hidden md:block w-60 shrink-0 h-screen sticky top-0 z-40">
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 md:block">
           <Sidebar />
         </aside>
 
@@ -24,7 +24,7 @@ export function AppLayout({ children, hideNav = false }: AppLayoutProps) {
             - Increased max-width to 'max-w-7xl' for a wider, less centered-column look
             - Increased padding 'md:p-10' to push content down from the top
         */}
-        <main className="flex-1 w-full relative">
+        <main className="relative w-full md:pl-60">
           <div className="w-full max-w-[88rem] mx-auto px-4 py-6 md:px-10 md:py-10 pb-32">
              {/* The children now have room to breathe */}
             {children}
