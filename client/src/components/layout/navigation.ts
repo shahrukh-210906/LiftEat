@@ -1,12 +1,23 @@
-import { LayoutDashboard, Dumbbell, Utensils } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Dumbbell,
+  Utensils,
+  LineChart,
+  User,
+} from "lucide-react";
 
 export const primaryNavigation = [
-  { icon: LayoutDashboard, label: 'Today', path: '/dashboard' },
-  { icon: Dumbbell, label: 'Train', path: '/workout' },
-  { icon: Utensils, label: 'Nutrition', path: '/diet' },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Workout", href: "/workout", icon: Dumbbell },
+  { name: "Diet", href: "/diet", icon: Utensils },
+  { name: "Progress", href: "/progress", icon: LineChart },
+  { name: "Profile", href: "/profile", icon: User },
 ];
 
-export function isNavigationActive(pathname: string, path: string) {
-  if (path === '/workout') return ['/workout', '/routines', '/exercises'].some(prefix => pathname === prefix || pathname.startsWith(prefix + '/'));
-  return pathname === path;
-}
+// This is the missing function your layout is looking for
+export const isNavigationActive = (href: string, currentPath: string) => {
+  if (href === "/dashboard") {
+    return currentPath === "/dashboard" || currentPath === "/";
+  }
+  return currentPath.startsWith(href);
+};

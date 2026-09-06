@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, MessageSquare, User, LogOut } from "lucide-react";
+import { Dumbbell, MessageSquare, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { primaryNavigation, isNavigationActive } from './navigation';
@@ -8,10 +8,11 @@ export function Sidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
 
+  // primaryNavigation uses 'name' and 'href'. We align the extra items to match those properties.
+  // Profile is already included in primaryNavigation, so we only need to append AI Coach.
   const navItems = [
     ...primaryNavigation,
-    { icon: MessageSquare, label: "AI Coach", path: "/ai-chat" },
-    { icon: User, label: "Profile", path: "/profile" },
+    { icon: MessageSquare, name: "AI Coach", href: "/ai-chat" },
   ];
 
   return (
@@ -26,17 +27,22 @@ export function Sidebar() {
         <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center">
           <Dumbbell className="w-5 h-5 text-white" />
         </div>
-        <div><span className="font-black text-xl tracking-tight text-black">LiftEat</span><p className="text-[0.55rem] tracking-[0.2em] text-black/35">TRAIN · FUEL · REPEAT</p></div>
+        <div>
+          <span className="font-black text-xl tracking-tight text-black">LiftEat</span>
+          <p className="text-[0.55rem] tracking-[0.2em] text-black/35">TRAIN · FUEL · REPEAT</p>
+        </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-2">
         {navItems.map((item) => {
-          const isActive = isNavigationActive(location.pathname, item.path);
+          // Pass the arguments in the correct order based on your navigation.ts definition
+          const isActive = isNavigationActive(item.href, location.pathname);
+          
           return (
             <Link
-              key={item.path}
-              to={item.path}
+              key={item.href}
+              to={item.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group",
@@ -46,7 +52,7 @@ export function Sidebar() {
               )}
             >
               <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110")} />
-              <span className="font-medium">{item.label}</span>
+              <span className="font-medium">{item.name}</span>
             </Link>
           );
         })}

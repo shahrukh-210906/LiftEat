@@ -17,6 +17,7 @@ const WorkoutSession = lazy(() => import("./pages/WorkoutSession"));
 const Diet = lazy(() => import("./pages/Diet"));
 const AIChat = lazy(() => import("./pages/AIChat"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Progress = lazy(() => import("./pages/Progress")); // Added Progress import
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ExerciseDetails = lazy(() => import("./pages/ExerciseDetails"));
 
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       <Route path="/workout/:id" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
 
       <Route path="/diet" element={<ProtectedRoute><Diet /></ProtectedRoute>} />
+      <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} /> {/* Added Progress route */}
       <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       
@@ -68,7 +70,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<div className="min-h-screen grid place-items-center">Loading…</div>}><AppRoutes /></Suspense>
+          <Suspense fallback={<div className="min-h-screen grid place-items-center">Loading…</div>}>
+            <AppRoutes />
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

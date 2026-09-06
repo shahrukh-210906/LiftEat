@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Activity, ArrowUpRight, Flame, Sparkles, Trophy, Zap } from "lucide-react";
+import { Activity, ArrowUpRight, Flame, Sparkles, Trophy, Zap, LayoutDashboard, LineChart } from "lucide-react";
 import { AppLayout } from "../components/layout/AppLayout";
 import { StatsCard } from "../components/dashboard/StatsCard";
 import { MacroProgress } from "../components/dashboard/MacroProgress";
 import { QuickActions } from "../components/dashboard/QuickActions";
 import { ProactiveInsights } from '@/components/dashboard/ProactiveInsights';
+import { ProgressTab } from "@/components/dashboard/ProgressTab";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../lib/api";
 import { WorkoutSession, DietLog } from "../lib/types";
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'progress'>('overview');
 
   useEffect(() => {
     if (user) fetchDashboardData();
@@ -66,118 +68,152 @@ export default function Dashboard() {
             </Link>
         </header>
 
-        {loading && <p role="status">Loading your day…</p>}
-        {error && <div role="alert" className="app-card p-4">{error} <button className="underline font-semibold" onClick={fetchDashboardData}>Retry</button></div>}
-        <section aria-label="Daily actions" className="grid gap-4 sm:grid-cols-2">
-          <Link to={activeWorkout ? `/workout/${activeWorkout._id}` : '/routines'} className="app-card p-6 hover:border-black/30">
-            <Activity className="mb-4 h-6 w-6" /><h2 className="text-xl font-bold">{activeWorkout ? 'Continue workout' : 'Choose a workout'}</h2>
-            <p className="mt-2 text-sm text-gray-500">{activeWorkout ? activeWorkout.name : 'Open your routines and plan your next session.'}</p>
-          </Link>
-          <Link to="/diet" className="app-card p-6 hover:border-black/30"><Flame className="mb-4 h-6 w-6" /><h2 className="text-xl font-bold">Log a meal</h2><p className="mt-2 text-sm text-gray-500">Search foods, describe a meal, or scan your plate.</p></Link>
-        </section>
-        {!loading && !error && <>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard
-            icon={<Flame className="w-6 h-6" />}
-            title="Calories"
-            value={todayTotals.calories}
-            subtitle={`/ ${profile?.daily_calorie_goal || 2000} kcal`}
-            trend={todayTotals.calories > 0 ? "up" : "neutral"}
-          />
-          <StatsCard
-            icon={<Activity className="w-6 h-6" />}
-            title="Workouts"
-            value={workoutCount}
-            subtitle="Sessions this week"
-            trend={workoutCount >= 3 ? "up" : "neutral"}
-          />
-          <StatsCard
-            icon={<Zap className="w-6 h-6" />}
-            title="Meals logged"
-            value={todaysDiet.length}
-            subtitle="Entries today"
-          />
-          <StatsCard
-            icon={<Trophy className="w-6 h-6" />}
-            title="Weight"
-            value={`${profile?.weight_kg || "-"} kg`}
-            subtitle="Current weight"
-          />
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 rounded-xl bg-black/5 p-1 w-fit">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
+              activeTab === 'overview'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-black/60 hover:text-black hover:bg-black/5'
+            }`}
+          >
+            <LayoutDashboard className="h-4 w-4" /> Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('progress')}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
+              activeTab === 'progress'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-black/60 hover:text-black hover:bg-black/5'
+            }`}
+          >
+            <LineChart className="h-4 w-4" /> Progress
+          </button>
         </div>
-        <ProactiveInsights />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Quick Actions & Last Workout */}
-          <div className="lg:col-span-2 space-y-8">
-            <section>
-              <h2 className="text-xl font-black text-foreground mb-4">
-                Quick Start
-              </h2>
-              <div className="app-card p-4">
-                <QuickActions />
+        {/* Tab Content */}
+        {activeTab === 'overview' ? (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {loading && <p role="status">Loading your day…</p>}
+            {error && <div role="alert" className="app-card p-4">{error} <button className="underline font-semibold" onClick={fetchDashboardData}>Retry</button></div>}
+            
+            <section aria-label="Daily actions" className="grid gap-4 sm:grid-cols-2">
+              <Link to={activeWorkout ? `/workout/${activeWorkout._id}` : '/routines'} className="app-card p-6 hover:border-black/30">
+                <Activity className="mb-4 h-6 w-6" /><h2 className="text-xl font-bold">{activeWorkout ? 'Continue workout' : 'Choose a workout'}</h2>
+                <p className="mt-2 text-sm text-gray-500">{activeWorkout ? activeWorkout.name : 'Open your routines and plan your next session.'}</p>
+              </Link>
+              <Link to="/diet" className="app-card p-6 hover:border-black/30"><Flame className="mb-4 h-6 w-6" /><h2 className="text-xl font-bold">Log a meal</h2><p className="mt-2 text-sm text-gray-500">Search foods, describe a meal, or scan your plate.</p></Link>
+            </section>
+            
+            {!loading && !error && <>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard
+                  icon={<Flame className="w-6 h-6" />}
+                  title="Calories"
+                  value={todayTotals.calories}
+                  subtitle={`/ ${profile?.daily_calorie_goal || 2000} kcal`}
+                  trend={todayTotals.calories > 0 ? "up" : "neutral"}
+                />
+                <StatsCard
+                  icon={<Activity className="w-6 h-6" />}
+                  title="Workouts"
+                  value={workoutCount}
+                  subtitle="Sessions this week"
+                  trend={workoutCount >= 3 ? "up" : "neutral"}
+                />
+                <StatsCard
+                  icon={<Zap className="w-6 h-6" />}
+                  title="Meals logged"
+                  value={todaysDiet.length}
+                  subtitle="Entries today"
+                />
+                <StatsCard
+                  icon={<Trophy className="w-6 h-6" />}
+                  title="Weight"
+                  value={`${profile?.weight_kg || "-"} kg`}
+                  subtitle="Current weight"
+                />
               </div>
-            </section>
+              <ProactiveInsights />
 
-            <section>
-              <h2 className="text-xl font-black text-foreground mb-4">
-                Last Session
-              </h2>
-              {lastWorkout ? (
-                <Link to={`/workout/${lastWorkout._id}`} className="app-card group flex items-center justify-between p-6 transition-all hover:-translate-y-1">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {lastWorkout.name}
-                    </h3>
-                    <p className="text-gray-500 text-sm mt-1">
-                      {new Date(lastWorkout.completed_at || lastWorkout.started_at).toLocaleDateString()} •{" "}
-                      {lastWorkout.duration_minutes} mins
-                    </p>
-                  </div>
-                  <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
-                    <Activity className="w-5 h-5" />
-                  </div>
-                </Link>
-              ) : (
-                <div className="p-6 text-gray-400 text-center border-2 border-dashed border-gray-100 rounded-3xl">
-                  No recent workouts found.
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: Quick Actions & Last Workout */}
+                <div className="lg:col-span-2 space-y-8">
+                  <section>
+                    <h2 className="text-xl font-black text-foreground mb-4">
+                      Quick Start
+                    </h2>
+                    <div className="app-card p-4">
+                      <QuickActions />
+                    </div>
+                  </section>
+
+                  <section>
+                    <h2 className="text-xl font-black text-foreground mb-4">
+                      Last Session
+                    </h2>
+                    {lastWorkout ? (
+                      <Link to={`/workout/${lastWorkout._id}`} className="app-card group flex items-center justify-between p-6 transition-all hover:-translate-y-1">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {lastWorkout.name}
+                          </h3>
+                          <p className="text-gray-500 text-sm mt-1">
+                            {new Date(lastWorkout.completed_at || lastWorkout.started_at).toLocaleDateString()} •{" "}
+                            {lastWorkout.duration_minutes} mins
+                          </p>
+                        </div>
+                        <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
+                          <Activity className="w-5 h-5" />
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="p-6 text-gray-400 text-center border-2 border-dashed border-gray-100 rounded-3xl">
+                        No recent workouts found.
+                      </div>
+                    )}
+                  </section>
                 </div>
-              )}
-            </section>
-          </div>
 
-          {/* Right Column: Nutrition */}
-          <div>
-            <h2 className="text-xl font-black text-foreground mb-4">
-              Nutrition
-            </h2>
-            <div className="app-card p-6 space-y-5">
-              <MacroProgress
-                label="Protein"
-                current={Math.round(todayTotals.protein)}
-                goal={profile?.daily_protein_goal || 150}
-                unit="g"
-                color="primary"
-              />
-              <MacroProgress
-                label="Carbs"
-                current={Math.round(todayTotals.carbs)}
-                goal={profile?.daily_carbs_goal || 200}
-                unit="g"
-                color="accent"
-              />
-              <MacroProgress
-                label="Fat"
-                current={Math.round(todayTotals.fat)}
-                goal={profile?.daily_fat_goal || 65}
-                unit="g"
-                color="warning"
-              />
-            </div>
+                {/* Right Column: Nutrition */}
+                <div>
+                  <h2 className="text-xl font-black text-foreground mb-4">
+                    Nutrition
+                  </h2>
+                  <div className="app-card p-6 space-y-5">
+                    <MacroProgress
+                      label="Protein"
+                      current={Math.round(todayTotals.protein)}
+                      goal={profile?.daily_protein_goal || 150}
+                      unit="g"
+                      color="primary"
+                    />
+                    <MacroProgress
+                      label="Carbs"
+                      current={Math.round(todayTotals.carbs)}
+                      goal={profile?.daily_carbs_goal || 200}
+                      unit="g"
+                      color="accent"
+                    />
+                    <MacroProgress
+                      label="Fat"
+                      current={Math.round(todayTotals.fat)}
+                      goal={profile?.daily_fat_goal || 65}
+                      unit="g"
+                      color="warning"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>}
           </div>
-        </div>
-        </>}
+        ) : (
+          <div className="animate-in fade-in duration-300">
+            <ProgressTab />
+          </div>
+        )}
       </div>
     </AppLayout>
   );
