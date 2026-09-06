@@ -1,16 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Dumbbell, Utensils, MessageSquare, User, LogOut } from "lucide-react";
+import { Dumbbell, MessageSquare, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { primaryNavigation, isNavigationActive } from './navigation';
 
 export function Sidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Dumbbell, label: "Workout", path: "/workout" },
-    { icon: Utensils, label: "Diet", path: "/diet" },
+    ...primaryNavigation,
     { icon: MessageSquare, label: "AI Coach", path: "/ai-chat" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
@@ -33,11 +32,12 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-2">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = isNavigationActive(location.pathname, item.path);
           return (
             <Link
               key={item.path}
               to={item.path}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
                 "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group",
                 isActive

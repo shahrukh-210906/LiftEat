@@ -158,6 +158,15 @@ test('meal photos create reviewable drafts and save as photo estimates', async (
     assert.equal((await upload(png, 'text/plain')).status, 400);
   } finally { stub.mock.restore(); }
 });
+test('Today returns only the signed-in account active workout', async () => {
+  const Session = require('../models/WorkoutSession');
+  const own = await Session.create({ user: alice.user.id, name: 'Resume my workout', is_active: true, started_at: new Date(Date.now() + 1000) });
+  await Session.create({ user: bob.user.id, name: 'Private other workout', is_active: true, started_at: new Date(Date.now() + 2000) });
+  const result = await request('/dashboard/stats', alice.token);
+  assert.equal(result.status, 200);
+  assert.equal(result.data.activeWorkout._id, own.id);
+  assert.doesNotMatch(JSON.stringify(result.data), /Private other workout/);
+});
 test('search treats regex characters as literal text', async () => {
   const result = await request('/exercises?query=%5B', alice.token);
   assert.equal(result.status, 200);

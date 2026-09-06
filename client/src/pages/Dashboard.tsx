@@ -15,19 +15,26 @@ export default function Dashboard() {
   const [lastWorkout, setLastWorkout] = useState<WorkoutSession | null>(null);
   const [todaysDiet, setTodaysDiet] = useState<DietLog[]>([]);
   const [workoutCount, setWorkoutCount] = useState(0);
+  const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (user) fetchDashboardData();
   }, [user]);
 
   const fetchDashboardData = async () => {
+    setLoading(true); setError('');
     try {
       const { data } = await api.get("/dashboard/stats");
       setLastWorkout(data.lastWorkout);
       setTodaysDiet(data.todaysDiet);
       setWorkoutCount(data.weeklyWorkoutCount);
+      setActiveWorkout(data.activeWorkout || null);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      setError('Your overview could not load. Please retry.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,17 +56,26 @@ export default function Dashboard() {
         <header className="flex flex-col justify-between gap-6 border-b border-black/10 pb-8 sm:flex-row sm:items-end">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 text-xs font-bold text-black/40">
-                <Sparkles className="h-3.5 w-3.5" /> DAILY PERFORMANCE BRIEF
+                <Sparkles className="h-3.5 w-3.5" /> TODAY
               </div>
               <h1 className="max-w-2xl text-4xl font-black tracking-[-0.04em] text-black md:text-5xl">Good day, {firstName}.</h1>
               <p className="mt-3 max-w-lg text-sm text-black/45">Your training and nutrition overview for today.</p>
             </div>
-            <Link to="/workout" className="inline-flex w-fit items-center gap-2 rounded-xl bg-black px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-black/80">
-              Start training <ArrowUpRight className="h-4 w-4" />
+            <Link to="/ai-chat" className="inline-flex w-fit items-center gap-2 rounded-xl border border-black/15 px-5 py-3 text-sm font-bold transition-colors hover:bg-black/5">
+              Ask your coach <ArrowUpRight className="h-4 w-4" />
             </Link>
         </header>
 
-        <ProactiveInsights />
+        {loading && <p role="status">Loading your day…</p>}
+        {error && <div role="alert" className="app-card p-4">{error} <button className="underline font-semibold" onClick={fetchDashboardData}>Retry</button></div>}
+        <section aria-label="Daily actions" className="grid gap-4 sm:grid-cols-2">
+          <Link to={activeWorkout ? `/workout/${activeWorkout._id}` : '/routines'} className="app-card p-6 hover:border-black/30">
+            <Activity className="mb-4 h-6 w-6" /><h2 className="text-xl font-bold">{activeWorkout ? 'Continue workout' : 'Choose a workout'}</h2>
+            <p className="mt-2 text-sm text-gray-500">{activeWorkout ? activeWorkout.name : 'Open your routines and plan your next session.'}</p>
+          </Link>
+          <Link to="/diet" className="app-card p-6 hover:border-black/30"><Flame className="mb-4 h-6 w-6" /><h2 className="text-xl font-bold">Log a meal</h2><p className="mt-2 text-sm text-gray-500">Search foods, describe a meal, or scan your plate.</p></Link>
+        </section>
+        {!loading && !error && <>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -79,9 +95,9 @@ export default function Dashboard() {
           />
           <StatsCard
             icon={<Zap className="w-6 h-6" />}
-            title="Active Streak"
-            value="3 Days"
-            subtitle="Keep it up!"
+            title="Meals logged"
+            value={todaysDiet.length}
+            subtitle="Entries today"
           />
           <StatsCard
             icon={<Trophy className="w-6 h-6" />}
@@ -90,6 +106,7 @@ export default function Dashboard() {
             subtitle="Current weight"
           />
         </div>
+        <ProactiveInsights />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Quick Actions & Last Workout */}
@@ -160,6 +177,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        </>}
       </div>
     </AppLayout>
   );

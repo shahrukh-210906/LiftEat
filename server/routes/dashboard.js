@@ -41,6 +41,7 @@ router.get('/stats', auth, async (req, res) => {
   });
 
   res.json({
+    activeWorkout: await WorkoutSession.findOne({ user: req.user.id, is_active: true }).sort({ started_at: -1 }).select('_id name started_at'),
     lastWorkout,
     lastWorkoutExerciseCount,
     todaysDiet,
