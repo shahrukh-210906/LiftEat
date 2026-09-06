@@ -10,7 +10,7 @@ const dietLogSchema = new mongoose.Schema({
   fat: Number,
   meal_type: String,
   mealDraft: { type: mongoose.Schema.Types.ObjectId, unique: true, sparse: true },
-  source: { type: String, enum: ['manual', 'ai_estimate'], default: 'manual' },
+  source: { type: String, enum: ['manual', 'ai_estimate', 'ai_photo'], default: 'manual' },
   items: [{ name: String, quantity_g: Number, calories: Number, protein: Number, carbs: Number, fat: Number, _id: false }],
   logged_at: { type: Date, default: Date.now }
 });

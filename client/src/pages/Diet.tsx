@@ -5,6 +5,7 @@ import { Plus, X, Flame, Beef, Wheat, Droplets, Sparkles } from "lucide-react";
 import { useDiet } from "@/hooks/useDiet";
 import { AddFoodDialog } from "@/components/diet/AddFoodDialog";
 import { MealTextLogger } from '@/components/diet/MealTextLogger';
+import { MealPhotoLogger } from '@/components/diet/MealPhotoLogger';
 
 export default function Diet() {
   const { profile, todaysLogs: logs, foodItems, totals, addLog, deleteLog, refreshData } = useDiet();
@@ -39,7 +40,10 @@ export default function Diet() {
           })}
         </section>
 
-        <MealTextLogger onSaved={refreshData} />
+        <div className="grid items-start gap-4 xl:grid-cols-2">
+          <MealPhotoLogger onSaved={refreshData} />
+          <MealTextLogger onSaved={refreshData} />
+        </div>
         {/* Clean List */}
         <section className="app-card p-5 md:p-7">
            <div className="mb-2 flex items-center justify-between"><div><p className="eyebrow">Daily log</p><h3 className="mt-1 text-xl font-black">Today's meals</h3></div><span className="text-sm font-bold text-foreground/40">{logs.length} items</span></div>
@@ -49,7 +53,8 @@ export default function Diet() {
                   <div>
                     <p className="font-bold text-gray-900 text-lg">{log.food_name}</p>
                     <p className="text-sm text-gray-400">{log.quantity_g}g • {log.calories} kcal</p>
-                    {log.source === 'ai_estimate' && <p className="mt-1 text-xs font-bold text-green-700">AI estimate · reviewed by you</p>}
+                    {log.source === 'ai_estimate' && <p className="mt-1 text-xs font-bold text-black/45">AI text estimate · reviewed by you</p>}
+                    {log.source === 'ai_photo' && <p className="mt-1 text-xs font-bold text-black/45">AI photo estimate · reviewed by you</p>}
                   </div>
                   <button aria-label={`Delete ${log.food_name}`} onClick={() => deleteLog(log._id)} className="text-gray-300 hover:text-red-500 sm:opacity-0 group-hover:opacity-100 transition-all p-2">
                     <X className="w-5 h-5" />

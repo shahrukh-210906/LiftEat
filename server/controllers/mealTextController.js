@@ -28,7 +28,7 @@ exports.parse = async (req, res, next) => {
       if (error.message === 'GEMINI_REQUEST_FAILED' || error.name === 'TimeoutError' || error.name === 'TypeError') return res.status(503).json({ error: 'The AI meal service is unavailable. Please retry later or use Add Food to log manually.' });
       return res.status(502).json({ error: 'The AI returned an invalid estimate. Nothing was logged. Try again or use Add Food.' });
     }
-    const draft = await MealDraft.create({ user: req.user.id, ...plan, expiresAt: new Date(Date.now() + 86400000) });
+    const draft = await MealDraft.create({ user: req.user.id, ...plan, source: 'text', expiresAt: new Date(Date.now() + 86400000) });
     res.status(201).json({ id: draft.id, items: plan.items, assumptions: plan.assumptions, expires_at: draft.expiresAt, estimated: true });
   } catch (error) { next(error); }
   finally { active.delete(req.user.id); }
@@ -46,7 +46,7 @@ exports.save = async (req, res, next) => {
     const total = Object.fromEntries(['quantity_g', 'calories', 'protein', 'carbs', 'fat'].map(k => [k, Math.round(items.reduce((s, i) => s + i[k], 0) * 10) / 10]));
     let log;
     try {
-      log = await DietLog.findOneAndUpdate({ mealDraft: draft._id, user: req.user.id }, { $setOnInsert: { ...total, items, food_name: items.map(i => i.name).join(', '), meal_type: req.body.meal_type, source: 'ai_estimate', logged_at: new Date() } }, { new: true, upsert: true, runValidators: true });
+      log = await DietLog.findOneAndUpdate({ mealDraft: draft._id, user: req.user.id }, { $setOnInsert: { ...total, items, food_name: items.map(i => i.name).join(', '), meal_type: req.body.meal_type, source: draft.source === 'photo' ? 'ai_photo' : 'ai_estimate', logged_at: new Date() } }, { new: true, upsert: true, runValidators: true });
     } catch (error) {
       if (error.code !== 11000) throw error;
       log = await DietLog.findOne({ mealDraft: draft._id, user: req.user.id });

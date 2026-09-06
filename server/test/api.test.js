@@ -134,6 +134,30 @@ test('vision accepts multipart images and rejects invalid uploads', async () => 
     assert.equal((await upload('image/png', 5 * 1024 * 1024 + 1)).status, 413);
   } finally { mocked.mock.restore(); }
 });
+test('meal photos create reviewable drafts and save as photo estimates', async () => {
+  const vision = require('../services/mealVision');
+  const item = { name: 'Grilled chicken', quantity_g: 150, calories: 248, protein: 46, carbs: 0, fat: 5 };
+  const stub = mock.method(vision, 'analyze', async () => ({ items: [item], assumptions: ['Portion estimated from the plate.'] }));
+  async function upload(bytes, type = 'image/png') {
+    const form = new FormData();
+    form.append('image', new Blob([bytes], { type }), 'meal.png');
+    const response = await fetch(base + '/api/diet/photo/estimate', { method: 'POST', headers: { Authorization: 'Bearer ' + alice.token }, body: form });
+    return { status: response.status, data: await response.json() };
+  }
+  try {
+    const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0]);
+    const before = await require('../models/DietLog').countDocuments({ user: alice.user.id });
+    const draft = await upload(png);
+    assert.equal(draft.status, 201);
+    assert.equal(draft.data.source, 'photo');
+    assert.equal(await require('../models/DietLog').countDocuments({ user: alice.user.id }), before);
+    const saved = await request('/diet/estimate/' + draft.data.id + '/save', alice.token, 'POST', { items: [item], meal_type: 'dinner' });
+    assert.equal(saved.status, 200);
+    assert.equal(saved.data.source, 'ai_photo');
+    assert.equal((await upload(new Uint8Array([1, 2, 3]))).status, 400);
+    assert.equal((await upload(png, 'text/plain')).status, 400);
+  } finally { stub.mock.restore(); }
+});
 test('search treats regex characters as literal text', async () => {
   const result = await request('/exercises?query=%5B', alice.token);
   assert.equal(result.status, 200);

@@ -4,8 +4,10 @@ const auth = require('../middleware/auth');
 const DietLog = require('../models/DietLog');
 const FoodItem = require('../models/FoodItem');
 const mealText = require('../controllers/mealTextController');
+const mealPhoto = require('../controllers/mealPhotoController');
 router.post('/estimate', auth, mealText.parse);
 router.post('/estimate/:id/save', auth, mealText.save);
+router.post('/photo/estimate', auth, mealPhoto.upload, mealPhoto.parse);
 
 // Get today's logs
 router.get('/today', auth, async (req, res) => {

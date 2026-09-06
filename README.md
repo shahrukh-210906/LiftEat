@@ -20,6 +20,8 @@ The coach reads only the authenticated account's profile, latest 30 workouts wit
 
 Body-image analysis still uses optional local Ollama with `OLLAMA_VISION_MODEL` (default `llama3.2-vision`). Core tracking works without AI; unavailable AI requests return a clear error. Image uploads accept JPEG, PNG and WebP up to 5 MB.
 
+Meal photo analysis uses the private FastAPI app in `vision-service`. Configure `VISION_SERVICE_URL` and `VISION_SERVICE_TOKEN` in the root `.env`, install `vision-service/requirements.txt`, and run Uvicorn on port 8000. The Node API authenticates users and forwards uploads; the browser never receives the Gemini key or service token. See `MEAL_PHOTO_ANALYSIS.md` for the full flow and deployment steps.
+
 ## Checks
 
 - Client: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
