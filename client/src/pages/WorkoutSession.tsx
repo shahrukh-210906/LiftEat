@@ -84,6 +84,7 @@ export default function WorkoutSession() {
                     {exerciseName}
                   </h3>
                   {exercise.target_sets && <p className="text-sm text-gray-500">Target: {exercise.target_sets} sets</p>}
+                  {exercise.target_reps && <p className="text-sm text-gray-500">{exercise.target_reps} reps per set · Rest {exercise.rest_seconds}s</p>}
                 </div>
               </div>
               

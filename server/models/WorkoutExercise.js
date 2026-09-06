@@ -15,6 +15,8 @@ const workoutExerciseSchema = new mongoose.Schema({
   muscle_group: String,
   order_index: Number,
   target_sets: { type: Number, min: 1 },
+  target_reps: { type: Number, min: 1, max: 30 },
+  rest_seconds: { type: Number, min: 30, max: 300 },
   // [NEW] Added sets array
   sets: [{
     set_number: Number,

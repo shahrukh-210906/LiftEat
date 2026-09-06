@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { GenerateWorkout } from '@/components/workout/GenerateWorkout';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +69,7 @@ export default function Routines() {
           </Button>
         </div>
 
+        <GenerateWorkout onSaved={fetchRoutines} />
         {loading ? (
           <div className="grid place-items-center py-20">
             <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />

@@ -6,8 +6,11 @@ const WorkoutExercise = require('../models/WorkoutExercise');
 const WorkoutRoutine = require('../models/WorkoutRoutine');
 const Exercise = require('../models/Exercise');
 router.use(auth);
+const aiWorkout = require('../controllers/aiWorkoutController');
+router.post('/ai/generate', aiWorkout.generate);
+router.post('/ai/:id/save', aiWorkout.save);
 router.get('/routines', async (req, res) => {
-  res.json(await WorkoutRoutine.find({ user: req.user.id }).populate('exercises.exercise', '-notes').sort({ created_at: -1 }));
+  res.json(await WorkoutRoutine.find({ user: req.user.id, status: { $ne: 'draft' } }).populate('exercises.exercise', '-notes').sort({ created_at: -1 }));
 });
 router.post('/routines', async (req, res) => {
   const { name, exercises } = req.body;
@@ -28,7 +31,7 @@ router.post('/start', async (req, res) => {
   res.status(201).json(await WorkoutSession.create({ user: req.user.id, name: name || 'Quick Workout' }));
 });
 router.post('/start/:routineId', async (req, res) => {
-  const routine = await WorkoutRoutine.findOne({ _id: req.params.routineId, user: req.user.id }).populate('exercises.exercise', '-notes');
+  const routine = await WorkoutRoutine.findOne({ _id: req.params.routineId, user: req.user.id, status: { $ne: 'draft' } }).populate('exercises.exercise', '-notes');
   if (!routine) return res.status(404).json({ error: 'Routine not found' });
   if (routine.exercises.some(item => !item.exercise)) return res.status(409).json({ error: 'This routine contains a removed exercise. Please recreate it.' });
   const session = await WorkoutSession.create({ user: req.user.id, name: routine.name });
@@ -36,7 +39,7 @@ router.post('/start/:routineId', async (req, res) => {
     await WorkoutExercise.insertMany(routine.exercises.map((item, index) => ({
       workout_session: session._id, exercise_base: item.exercise._id,
       exercise_name: item.exercise.name, muscle_group: item.exercise.bodyPart,
-      order_index: index, target_sets: item.sets, sets: [],
+      order_index: index, target_sets: item.sets, target_reps: item.reps, rest_seconds: item.rest_seconds, sets: [],
     })));
   } catch (error) {
     await WorkoutExercise.deleteMany({ workout_session: session._id });

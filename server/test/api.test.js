@@ -193,3 +193,34 @@ test('Firebase users map to isolated MongoDB accounts and legacy tokens cannot b
     assert.equal((await request('/auth/signin', null, 'POST', {})).status, 410);
   } finally { stub.mock.restore(); if (previous === undefined) delete process.env.FIREBASE_PROJECT_ID; else process.env.FIREBASE_PROJECT_ID = previous; }
 });
+
+test('AI workout drafts validate output, require review, isolate users and preserve targets', async () => {
+  await require('../models/Exercise').updateOne({ _id: exercise.id }, { $set: { equipment: 'barbell' } });
+  const plan = { name: 'AI legs', rationale: 'Based on recent training.', exercises: [{ exerciseId: exercise.id, sets: 3, reps: 8, rest_seconds: 90 }] };
+  const calls = [];
+  const stub = mock.method(require('../services/gemini'), 'generate', async options => { calls.push(options); return JSON.stringify(plan); });
+  const input = { focus: 'legs', duration_minutes: 45, equipment: ['barbell'] };
+  try {
+    assert.equal((await request('/workouts/ai/generate', alice.token, 'POST', { ...input, user: bob.user.id })).status, 400);
+    const generated = await request('/workouts/ai/generate', alice.token, 'POST', input);
+    assert.equal(generated.status, 201);
+    assert.equal(generated.data.status, 'draft');
+    assert.equal(calls[0].schema.additionalProperties, false);
+    assert.equal((await request('/workouts/routines', alice.token)).data.some(r => r._id === generated.data._id), false);
+    assert.equal((await request('/workouts/start/' + generated.data._id, alice.token, 'POST', {})).status, 404);
+    const savePath = '/workouts/ai/' + generated.data._id + '/save';
+    assert.equal((await request(savePath, bob.token, 'POST', {})).status, 404);
+    assert.equal((await request(savePath, alice.token, 'POST', {})).status, 200);
+    assert.equal((await request(savePath, alice.token, 'POST', {})).data._id, generated.data._id);
+    const started = await request('/workouts/start/' + generated.data._id, alice.token, 'POST', {});
+    const loaded = await request('/workouts/' + started.data._id, alice.token);
+    assert.equal(loaded.data.exercises[0].target_reps, 8);
+    assert.equal(loaded.data.exercises[0].rest_seconds, 90);
+    const before = await require('../models/WorkoutRoutine').countDocuments();
+    for (const invalid of ['not json', JSON.stringify({ ...plan, unexpected: true }), JSON.stringify({ ...plan, exercises: [{ ...plan.exercises[0], exerciseId: 'invented' }] }), JSON.stringify({ ...plan, exercises: [{ ...plan.exercises[0], sets: 500 }] })]) {
+      stub.mock.mockImplementation(async () => invalid);
+      assert.equal((await request('/workouts/ai/generate', alice.token, 'POST', input)).status, 502);
+    }
+    assert.equal(await require('../models/WorkoutRoutine').countDocuments(), before);
+  } finally { stub.mock.restore(); }
+});

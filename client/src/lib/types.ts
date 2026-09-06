@@ -48,6 +48,8 @@ export interface WorkoutExercise {
   workout_session: string;
   exercise_base?: Exercise;
   target_sets?: number;
+  target_reps?: number;
+  rest_seconds?: number;
   exercise_name: string;
   muscle_group: string | null;
   sets?: ExerciseSet[];

@@ -1,8 +1,8 @@
-require('dotenv').config();
+require('./config/env');
 const mongoose = require('mongoose');
 async function start() {
   const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
-  if (!uri) throw new Error('Set MONGODB_URI in server/.env');
+  if (!uri) throw new Error('Set MONGODB_URI in the project root .env');
   if (process.env.FIREBASE_PROJECT_ID) require('./firebase').auth();
   else if (!process.env.JWT_SECRET) throw new Error('Configure Firebase or JWT_SECRET');
   await mongoose.connect(uri, { serverSelectionTimeoutMS: 15000 });

@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+require('./config/env');
 const axios = require('axios');
 const Exercise = require('./models/Exercise');
 
-dotenv.config();
 
 const RAW_REPO_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
 
