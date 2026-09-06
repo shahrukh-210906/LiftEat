@@ -10,6 +10,8 @@ In `client`, copy `.env.example` to `.env` and set the Firebase web app values f
 
 Firebase ID tokens are refreshed by the client and verified by Firebase Admin on the server. Each Firebase UID maps to a MongoDB account so profiles, workouts, food logs and chat keep using isolated account IDs. An existing legacy account can be linked by matching email only after Firebase verifies that email; conflicting linked accounts are rejected. Legacy password endpoints are disabled when Firebase is configured. Environment files and service-account keys must stay local.
 
+For signup to work, open Firebase Console → Authentication → Get started, enable Email/Password, and save. Copy service-account JSON values into `server/.env` without the trailing JSON commas. The private key must retain its PEM header/footer and newline escapes. Keep API keys in `.env`, never `.env.example`. Start both servers before signing up at http://localhost:8080/auth. Demo accounts use the same Firebase signup and MongoDB profile flow as regular accounts; their credentials are not stored in the repository.
+
 For exercise data, run `npm run seed` in `server`. The seed updates exercises by name and adds missing records while preserving existing IDs, notes, ratings and routine references.
 
 AI chat and dashboard tips use the Gemini REST API. Set `GEMINI_API_KEY` in `server/.env`, optionally set `GEMINI_MODEL` (default `gemini-2.5-flash`), and restart the server. Never put the key in client environment variables. API reference: https://ai.google.dev/api/generate-content.
