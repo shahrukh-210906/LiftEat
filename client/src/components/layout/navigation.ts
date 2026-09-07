@@ -7,9 +7,9 @@ import {
 } from "lucide-react";
 
 export const primaryNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Workout", href: "/workout", icon: Dumbbell },
-  { name: "Diet", href: "/diet", icon: Utensils },
+  { name: "Today", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Train", href: "/workout", icon: Dumbbell },
+  { name: "Nutrition", href: "/diet", icon: Utensils },
   { name: "Progress", href: "/progress", icon: LineChart },
   { name: "Profile", href: "/profile", icon: User },
 ];

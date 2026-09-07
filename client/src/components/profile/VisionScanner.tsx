@@ -36,17 +36,17 @@ export function VisionScanner({ onScanComplete }: { onScanComplete: (data: any) 
   };
 
   return (
-    <div className="p-6 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-xl relative overflow-hidden border border-white/10">
+    <div className="relative overflow-hidden rounded-2xl border border-black bg-black p-6 text-white">
       <div className="absolute top-0 right-0 p-3 opacity-10"><ScanEye className="w-32 h-32" /></div>
       <div className="relative z-10">
         <h2 className="text-lg font-bold flex items-center gap-2 mb-2">
-          <Camera className="w-5 h-5 text-indigo-400" /> AI Body Scan
+          <Camera className="h-5 w-5 text-white/70" /> AI Body Scan
         </h2>
         
         <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleUpload} />
 
         {!result ? (
-          <Button onClick={() => fileRef.current?.click()} disabled={analyzing} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+          <Button onClick={() => fileRef.current?.click()} disabled={analyzing} className="w-full bg-white text-black hover:bg-gray-200">
             {analyzing ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2 w-4 h-4" />}
             {analyzing ? "Scanning..." : "Upload Photo"}
           </Button>

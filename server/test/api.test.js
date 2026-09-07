@@ -11,6 +11,7 @@ async function request(path, token, method = 'GET', body) {
   return { status: response.status, data: await response.json() };
 }
 before(async () => {
+  process.env.NODE_ENV = 'test';
   process.env.JWT_SECRET = 'isolated-test-secret-not-for-production';
   database = await MongoMemoryServer.create();
   await mongoose.connect(database.getUri());
@@ -335,4 +336,65 @@ test('dashboard insights isolate accounts, persist dismissals, refresh and never
   assert.equal((await request('/dashboard/insights')).status,401);
   assert.equal((await request('/dashboard/insights/not-real/dismiss',token,'POST',{})).status,404);
  }finally{stub.mock.restore();}
+});
+
+test('progress uses real owned workout and nutrition history', async () => {
+  const Session = require('../models/WorkoutSession');
+  const Lift = require('../models/WorkoutExercise');
+  const Diet = require('../models/DietLog');
+  const own = await Session.create({ user: alice.user.id, name: 'Progress test', is_active: false, completed_at: new Date() });
+  const other = await Session.create({ user: bob.user.id, name: 'Private progress', is_active: false, completed_at: new Date() });
+  await Lift.create([
+    { workout_session: own.id, exercise_name: 'Progress press', sets: [{ weight: 100, reps: 5, completed: true }] },
+    { workout_session: other.id, exercise_name: 'Private curl', sets: [{ weight: 999, reps: 1, completed: true }] },
+  ]);
+  await Diet.create({ user: alice.user.id, food_name: 'Progress meal', calories: 500, protein: 40, carbs: 50, fat: 15 });
+
+  const result = await request('/dashboard/progress?range=30', alice.token);
+  assert.equal(result.status, 200);
+  assert.ok(result.data.personalRecords.some(record => record.exercise === 'Progress press' && record.estimated1RM === 117));
+  assert.ok(result.data.nutritionTrends.some(day => day.calories >= 500));
+  assert.doesNotMatch(JSON.stringify(result.data), /Private curl|999/);
+  assert.equal((await request('/dashboard/progress?range=31', alice.token)).status, 400);
+});
+
+test('data export is complete and account deletion removes associated records', async () => {
+  const User = require('../models/User');
+  const Profile = require('../models/Profile');
+  const Session = require('../models/WorkoutSession');
+  const Lift = require('../models/WorkoutExercise');
+  const ExerciseSet = require('../models/ExerciseSet');
+  const Diet = require('../models/DietLog');
+  const SavedMeal = require('../models/SavedMeal');
+  const Routine = require('../models/WorkoutRoutine');
+  const Chat = require('../models/ChatMessage');
+  const deletedUser = await User.create({ email: 'delete-me@example.com', password: 'not-a-login-hash', fullName: 'Delete Me' });
+  const token = jwt.sign({ id: deletedUser.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  await Profile.create({ user: deletedUser.id, full_name: 'Delete Me' });
+  await Diet.create({ user: deletedUser.id, food_name: 'Private meal', quantity_g: 100, calories: 250 });
+  await SavedMeal.create({ user: deletedUser.id, name: 'Saved meal', quantity_g: 100, calories: 250 });
+  const session = await Session.create({ user: deletedUser.id, name: 'Private session' });
+  const workoutExercise = await Lift.create({ workout_session: session.id, exercise_name: 'Private lift' });
+  await ExerciseSet.create({ workout_exercise: workoutExercise.id, set_number: 1, weight_kg: 50, reps: 8 });
+  await Routine.create({ user: deletedUser.id, name: 'Private routine', exercises: [{ exercise: exercise.id, sets: 3 }] });
+  await Chat.create({ user: deletedUser.id, role: 'user', content: 'Private coaching message' });
+
+  const exported = await request('/profile/export', token);
+  assert.equal(exported.status, 200);
+  assert.equal(exported.data.account.email, 'delete-me@example.com');
+  assert.equal(exported.data.nutrition.logs[0].food_name, 'Private meal');
+  assert.equal(exported.data.training.sessions[0].name, 'Private session');
+  assert.equal(exported.data.coach.messages[0].content, 'Private coaching message');
+  assert.equal(exported.data.account.password, undefined);
+
+  assert.equal((await request('/profile/delete', token, 'DELETE')).status, 200);
+  assert.equal(await User.countDocuments({ _id: deletedUser.id }), 0);
+  assert.equal(await Profile.countDocuments({ user: deletedUser.id }), 0);
+  assert.equal(await Diet.countDocuments({ user: deletedUser.id }), 0);
+  assert.equal(await SavedMeal.countDocuments({ user: deletedUser.id }), 0);
+  assert.equal(await Session.countDocuments({ user: deletedUser.id }), 0);
+  assert.equal(await Lift.countDocuments({ workout_session: session.id }), 0);
+  assert.equal(await ExerciseSet.countDocuments({ workout_exercise: workoutExercise.id }), 0);
+  assert.equal(await Routine.countDocuments({ user: deletedUser.id }), 0);
+  assert.equal(await Chat.countDocuments({ user: deletedUser.id }), 0);
 });

@@ -1,50 +1,27 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ProgressData } from "./ProgressTab";
 
-// Mock data generator for a 4-week grid
-const generateHeatmap = () => {
-  return Array.from({ length: 28 }).map(() => Math.random() > 0.4);
-};
-
-export function WorkoutConsistency({ dateRange }: { dateRange: string }) {
-  const days = generateHeatmap();
+export function WorkoutConsistency({ activity, range }: { activity: ProgressData["workoutConsistency"]; range: ProgressData["range"] }) {
+  const activityByDay = new Map(activity.map(day => [day.date, day.count]));
+  const end = new Date(range.end);
+  const start = new Date(Math.max(new Date(range.start).getTime(), end.getTime() - 97 * 86400000));
+  start.setUTCHours(0, 0, 0, 0);
+  const days: { date: string; count: number }[] = [];
+  for (const day = new Date(start); day <= end; day.setUTCDate(day.getUTCDate() + 1)) {
+    const date = day.toISOString().slice(0, 10);
+    days.push({ date, count: activityByDay.get(date) || 0 });
+  }
+  const total = activity.reduce((sum, day) => sum + day.count, 0);
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-blue-500" />
-          Consistency Heatmap
-        </CardTitle>
-      </CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="flex items-center justify-between text-lg"><span className="flex items-center gap-2"><Calendar className="h-5 w-5" /> Consistency</span><span className="text-sm font-medium text-black/45">{total} workouts</span></CardTitle></CardHeader>
       <CardContent>
-        <div className="mt-4 flex flex-col gap-2">
-          {/* Weekday Labels (Optional) */}
-          <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
-            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
-          </div>
-          
-          {/* 4 Weeks = 28 Days */}
-          <div className="grid grid-cols-7 gap-2">
-            {days.map((isCompleted, i) => (
-              <div
-                key={i}
-                className={`w-full aspect-square rounded-sm ${
-                  isCompleted ? "bg-primary" : "bg-muted"
-                }`}
-                title={`Day ${i + 1}`}
-              />
-            ))}
-          </div>
-          
-          <div className="flex items-center justify-end gap-2 mt-4 text-xs text-muted-foreground">
-            <span>Less</span>
-            <div className="w-3 h-3 rounded-sm bg-muted"></div>
-            <div className="w-3 h-3 rounded-sm bg-primary/50"></div>
-            <div className="w-3 h-3 rounded-sm bg-primary"></div>
-            <span>More</span>
-          </div>
+        <div className="mt-4 grid grid-cols-7 gap-1.5" aria-label={`${total} completed workouts in the selected period`}>
+          {days.map(day => <div key={day.date} className={`h-4 rounded-sm ${day.count > 1 ? "bg-black" : day.count === 1 ? "bg-black/65" : "bg-black/[0.06]"}`} title={`${day.date}: ${day.count} workout${day.count === 1 ? "" : "s"}`} />)}
         </div>
+        <p className="mt-4 text-xs text-black/40">Showing up to the latest 14 weeks in the selected range.</p>
       </CardContent>
     </Card>
   );

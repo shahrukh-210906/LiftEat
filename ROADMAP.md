@@ -7,8 +7,8 @@ Minimal black, white and gray UI. Fixed desktop sidebar. Improve usability and r
 1. Today screen and clearer navigation: current iteration. Prioritize training, meal logging and resuming an active workout. Keep existing URLs working.
 2. Simplify workout and meal logging: completed. Train is routine-first and resumes active sessions; Nutrition has one entry point with recent/search/text/photo choices plus saved and repeat meals.
 3. Autosave and recovery: retain drafts, prevent duplicate submissions, recover interrupted sessions, useful retry and loading states.
-4. Progress screen: real strength, consistency and nutrition trends with date ranges. Add primary navigation only when functional.
-5. Production foundation: error monitoring, backups with restore verification, rate limits, release checks and secure deployment configuration.
+4. Progress screen: completed. Strength records, consistency and nutrition trends use account-owned history with 30, 90, 180-day and year-to-date ranges.
+5. Production foundation: completed for the app server. Includes optional Sentry monitoring, health checks, rate limits, security headers, opt-in verified backups and retention cleanup.
 6. Real-user and mobile testing, accessibility, slow connections and complete journeys.
 
 ## Deferred AI and launch work — resume after the phase above
@@ -16,7 +16,7 @@ Minimal black, white and gray UI. Fixed desktop sidebar. Improve usability and r
 - Inline exercise swap: equipment availability, movement similarity, user constraints and active workout integration.
 - Deploy and harden the Python vision service: resource limits, private authentication, temporary-upload cleanup and operational monitoring.
 - Production deployment of frontend, Node API, database-connected jobs and Python service.
-- Privacy: upload disclosure/consent, retention, export and account-data deletion.
+- Privacy: completed. The profile explains AI data use, uploads remain in memory, exports cover all account areas and deletion removes Firebase plus associated MongoDB data.
 - Launch polish: performance, metadata, app icon, share previews and promotion assets.
 
 ## Existing AI features

@@ -1,43 +1,71 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PersonalRecords } from "./PersonalRecords";
-import { WorkoutConsistency } from "./WorkoutConsistency";
-import { StrengthTrends } from "./StrengthTrends";
+import api from "@/lib/api";
 import { NutritionTrends } from "./NutritionTrends";
+import { PersonalRecords } from "./PersonalRecords";
+import { StrengthTrends } from "./StrengthTrends";
+import { WorkoutConsistency } from "./WorkoutConsistency";
+
+export interface ProgressData {
+  range: { start: string; end: string };
+  personalRecords: { exercise: string; estimated1RM: number; weight: number; reps: number; date: string }[];
+  workoutConsistency: { date: string; count: number }[];
+  strengthExercises: string[];
+  strengthTrends: Record<string, string | number>[];
+  nutritionTrends: { date: string; calories: number; protein: number; carbs: number; fat: number }[];
+}
 
 export function ProgressTab() {
   const [dateRange, setDateRange] = useState("30");
+  const [data, setData] = useState<ProgressData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+
+  useEffect(() => {
+    let current = true;
+    setLoading(true);
+    setError("");
+    api.get<ProgressData>("/dashboard/progress", { params: { range: dateRange } })
+      .then(response => { if (current) setData(response.data); })
+      .catch(() => { if (current) setError("Your progress could not load. Please try again."); })
+      .finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, [dateRange, retry]);
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Global Controls */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Your Progress</h2>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight">Your progress</h1>
+          <p className="mt-1 text-sm text-black/50">Built from your completed workouts and logged meals.</p>
+        </div>
         <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]" aria-label="Progress date range">
             <SelectValue placeholder="Select date range" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="30">Last 30 Days</SelectItem>
-            <SelectItem value="90">Last 90 Days</SelectItem>
-            <SelectItem value="180">6 Months</SelectItem>
-            <SelectItem value="ytd">Year to Date</SelectItem>
+            <SelectItem value="30">Last 30 days</SelectItem>
+            <SelectItem value="90">Last 90 days</SelectItem>
+            <SelectItem value="180">Last 6 months</SelectItem>
+            <SelectItem value="ytd">Year to date</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Top Row: PRs and Consistency */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PersonalRecords dateRange={dateRange} />
-        <WorkoutConsistency dateRange={dateRange} />
-      </div>
-
-      {/* Bottom Row: Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <StrengthTrends dateRange={dateRange} />
-        <NutritionTrends dateRange={dateRange} />
-      </div>
+      {loading && <div className="app-card p-6 text-sm text-black/50" role="status">Calculating your progress…</div>}
+      {error && <div className="app-card flex items-center justify-between gap-4 p-6" role="alert"><span>{error}</span><Button variant="outline" onClick={() => setRetry(value => value + 1)}>Retry</Button></div>}
+      {!loading && !error && data && <>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <PersonalRecords records={data.personalRecords} />
+          <WorkoutConsistency activity={data.workoutConsistency} range={data.range} />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <StrengthTrends data={data.strengthTrends} exercises={data.strengthExercises} />
+          <NutritionTrends data={data.nutritionTrends} />
+        </div>
+      </>}
     </div>
   );
 }

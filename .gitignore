@@ -4,6 +4,7 @@ server/.env
 client/.env
 client/dist/
 *.tsbuildinfo
+backups/
 __pycache__/
 *.py[cod]
 .pytest_cache/

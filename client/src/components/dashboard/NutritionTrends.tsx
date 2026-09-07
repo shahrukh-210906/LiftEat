@@ -1,41 +1,24 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Utensils } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ProgressData } from "./ProgressTab";
 
-// Data normalized for calories. 
-// Protein (4 cal/g), Carbs (4 cal/g), Fat (9 cal/g)
-const nutritionData = [
-  { week: "Aug 10", Protein: 640, Carbs: 1120, Fats: 684 },
-  { week: "Aug 17", Protein: 660, Carbs: 1160, Fats: 684 },
-  { week: "Aug 24", Protein: 620, Carbs: 1080, Fats: 693 },
-  { week: "Aug 31", Protein: 680, Carbs: 1120, Fats: 675 },
-];
-
-export function NutritionTrends({ dateRange }: { dateRange: string }) {
+export function NutritionTrends({ data }: { data: ProgressData["nutritionTrends"] }) {
   return (
-    <Card className="h-96 flex flex-col">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Utensils className="w-5 h-5 text-orange-500" />
-          Nutrition Breakdown (Calories)
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={nutritionData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-            <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <Tooltip 
-              contentStyle={{ backgroundColor: "hsl(var(--background))", borderColor: "hsl(var(--border))" }}
-              itemStyle={{ color: "hsl(var(--foreground))" }}
-            />
-            <Legend wrapperStyle={{ fontSize: '12px' }}/>
-            <Bar dataKey="Protein" stackId="a" fill="#ef4444" radius={[0, 0, 4, 4]} />
-            <Bar dataKey="Carbs" stackId="a" fill="#eab308" />
-            <Bar dataKey="Fats" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+    <Card className="flex h-96 flex-col">
+      <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Utensils className="h-5 w-5" /> Daily macros</CardTitle></CardHeader>
+      <CardContent className="min-h-0 flex-1">
+        {!data.length ? <div className="grid h-full place-items-center text-sm text-black/45">Log meals to build your nutrition chart.</div> :
+          <ResponsiveContainer width="100%" height="100%"><BarChart data={data} margin={{ top: 5, right: 16, bottom: 5, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
+            <XAxis dataKey="date" tickFormatter={value => value.slice(5)} fontSize={12} />
+            <YAxis unit=" g" fontSize={12} width={48} />
+            <Tooltip labelFormatter={value => new Date(`${value}T00:00:00`).toLocaleDateString()} />
+            <Legend wrapperStyle={{ fontSize: "12px" }} />
+            <Bar dataKey="protein" name="Protein" stackId="macros" fill="#111111" />
+            <Bar dataKey="carbs" name="Carbs" stackId="macros" fill="#777777" />
+            <Bar dataKey="fat" name="Fat" stackId="macros" fill="#bbbbbb" radius={[3, 3, 0, 0]} />
+          </BarChart></ResponsiveContainer>}
       </CardContent>
     </Card>
   );

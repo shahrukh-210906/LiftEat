@@ -22,6 +22,12 @@ Body-image analysis still uses optional local Ollama with `OLLAMA_VISION_MODEL` 
 
 Meal photo analysis uses the private FastAPI app in `vision-service`. Configure `VISION_SERVICE_URL` and `VISION_SERVICE_TOKEN` in the root `.env`, install `vision-service/requirements.txt`, and run Uvicorn on port 8000. The Node API authenticates users and forwards uploads; the browser never receives the Gemini key or service token. See `MEAL_PHOTO_ANALYSIS.md` for the full flow and deployment steps.
 
+## Production operations
+
+The API exposes `GET /api/health`, applies security headers and rate limits, and can report server errors to Sentry when `SENTRY_DSN` is configured. Set `TRUST_PROXY=true` when the API runs behind a trusted single proxy. `CLIENT_ORIGIN` accepts a comma-separated list of allowed frontend origins.
+
+Database backups are disabled by default. In production, prefer the managed backup and point-in-time recovery offered by your MongoDB provider. For a long-running server with MongoDB Database Tools and durable storage, set `BACKUP_ENABLED=true` and `BACKUP_DIR` to a persistent directory. The app keeps the latest seven verified archives. Uploaded meal and physique images are processed in memory and are not stored by LiftEat; expired AI meal-review records are also removed daily.
+
 ## Checks
 
 - Client: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
